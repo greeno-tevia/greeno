@@ -475,10 +475,55 @@ footer{background:var(--green-dark);color:rgba(255,255,255,.5);text-align:center
   .container{padding:14px}
 }
 
+/* ═══ LOGIN SYSTEM ═════════════════════════════════════════════════════ */
+#login-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#071a0e 0%,#0d2e1a 60%,#1a5c30 100%);
+  display:flex;align-items:center;justify-content:center;flex-direction:column}
+.login-box{background:#fff;border-radius:18px;padding:40px 44px;width:380px;max-width:92vw;
+  box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.login-logo{text-align:center;margin-bottom:28px;display:flex;align-items:center;justify-content:center;gap:14px}
+.login-logo img{height:52px;object-fit:contain}
+.login-title{font-size:1.25rem;font-weight:900;color:#0d2e1a;text-align:center;margin-bottom:6px}
+.login-sub{font-size:.78rem;color:#888;text-align:center;margin-bottom:28px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:.75rem;font-weight:700;color:#444;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.login-field input{width:100%;padding:11px 14px;border:1.5px solid #dde;border-radius:10px;font-size:.9rem;outline:none;
+  transition:border-color .2s;box-sizing:border-box}
+.login-field input:focus{border-color:#1a5c30}
+.login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1a5c30,#2C6E49);color:#fff;
+  font-weight:800;font-size:.95rem;border:none;border-radius:10px;cursor:pointer;margin-top:8px;
+  letter-spacing:.3px;transition:opacity .2s}
+.login-btn:hover{opacity:.88}
+.login-error{color:#D32F2F;font-size:.78rem;margin-top:10px;text-align:center;display:none;
+  background:#FFEBEE;border-radius:8px;padding:8px 12px}
+
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
+
+<!-- ═══ LOGIN OVERLAY ═══════════════════════════════════════════════════ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="data:image/jpeg;base64,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st5ei/4H+R8A3ejarpsYlvdOvbRP+e1xA8Y/76YCsuvsrxMiSeH9QR0V0a3kBVhkHg9RX0F4G/Zg8K+G9JsP7QiuNZvwge4m8xIwXPJChUUheo5J7dq9LCcPVMXKXJPlUX1P0TBcHTxtWaoz5Ix/m7+Vj5G+EXwkufit4hvLSK8bSbKxs2vbi+SCO4SNAcY2SKy5JOOfSvPPEukXdj4/vtOknlN2l+9q80ZKkuHKlhn3PANfpFpmk2Oj2gttPtoLaHkiKBAig+uBXhHj74L6fpvjnW9fs/E2o6drF86pJqVmw8iRIhH5gIIBZSVycHnPfNZVMllJt0p6dj9YxHBmLpVoQwtS8Grq/n2s7HKp4B1/wAZyaLqF3pNlpd1cRi2uLvTCIpYwuAjxsigGQrjnvnnJr0X4K6h4z+AnjPUU1Dw/pY0m4s4IhNFptxa3v2ctjajRxRjapbqSSFxz2rFk8H6joVuk1tZXOp3G0LLeWtysJl9GfJV89CQMjjHXFew/ss/s/8Axf8A2oviBJ4T8H+MLvw2um2aXV5qN/dQXKOHfaIVVbT5mbByeABXBiMmpxvUlN819enbax8/mmRVMHg3HBRnKS+KUr/Cyf8AbA+MnxC+Ovw7udHbwTpngDTvDOoW4FkmpXkl7DeSNncLlUTIVWGFMnOepFfBdfsL4P8A2AvBfgnWm1K18YfEbQoSMN4e0HXVY2p5/duLy2mdlB6fxkf3gPl8e/aQ/wCCc/hHQ/h9d+Kfhnqet6jq1oubrQtRurKZLkZG5oW8qBgwGMqucnpjHHh4bEUqNT2TnDk6W7s9TNsJWeHjUim9T5+ooor1jwwooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP//Z" alt="GREENO" style="height:46px;object-fit:contain">
+      <img src="data:image/jpeg;base64,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" alt="TEVIA" style="height:32px;object-fit:contain">
+    </div>
+    <div class="login-title">GREENO CI</div>
+    <div class="login-sub">Dimensionnement Photovoltaïque</div>
+    <div class="login-field">
+      <label>Identifiant</label>
+      <input type="text" id="login-user" placeholder="Votre identifiant" autocomplete="username"
+             onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Mot de passe</label>
+      <input type="password" id="login-pass" placeholder="Mot de passe"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Se connecter</button>
+    <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect.</div>
+  </div>
+</div>
 
 <header>
   <div class="logo-wrap" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.95);border-radius:10px;padding:6px 14px">
@@ -493,6 +538,7 @@ footer{background:var(--green-dark);color:rgba(255,255,255,.5);text-align:center
   <div class="header-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
     <span style="font-size:.72rem;opacity:.7">Solutions Solaires<br>Côte d'Ivoire</span>
     <button onclick="window.open(window.location.href,'_blank')" style="padding:6px 14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:7px;color:#fff;font-size:.75rem;font-weight:bold;cursor:pointer;white-space:nowrap;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">＋ Nouveau Dimensionnement</button>
+    <div id="user-badge" style="display:none;align-items:center;gap:8px;cursor:pointer;background:rgba(255,255,255,.12);border-radius:20px;padding:5px 12px 5px 8px" onclick="doLogout()" title="Déconnexion"></div>
   </div>
 </header>
 <div class="section-nav" id="section-nav">
@@ -1688,18 +1734,118 @@ function switchSection(section){
   };
 })();
 
-// Init au chargement
-document.addEventListener('DOMContentLoaded', async function(){
+// ═══════════════════════════════════════════════════════════════
+// AUTH / SESSION MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+var currentUser = null;
+var SESSION_KEY  = 'grn_session';
+var SESSION_TTL  = 12 * 60 * 60 * 1000; // 12h
+
+var DEFAULT_USERS = [
+  {id:'admin',       nom:'Administrateur', role:'admin',      pwd:'greeno2024'},
+  {id:'commercial1', nom:'Koné Salif',     role:'commercial', pwd:'com123'},
+  {id:'commercial2', nom:'Bamba A.',       role:'commercial', pwd:'com456'},
+  {id:'tech1',       nom:'Touré M.',       role:'technicien', pwd:'tech123'},
+  {id:'tech2',       nom:'Bamba K.',       role:'technicien', pwd:'tech456'}
+];
+
+function getUsers(){
+  try{ var s=localStorage.getItem('grn_users'); return s?JSON.parse(s):DEFAULT_USERS; }catch(e){return DEFAULT_USERS;}
+}
+
+function doLogin(){
+  var u=((document.getElementById('login-user')||{}).value||'').trim().toLowerCase();
+  var p=((document.getElementById('login-pass')||{}).value||'').trim();
+  var err=document.getElementById('login-error');
+  var users=getUsers();
+  var found=null;
+  for(var i=0;i<users.length;i++){
+    if((users[i].id||'').toLowerCase()===u && users[i].pwd===p &&
+       (users[i].role==='commercial'||users[i].role==='admin')){
+      found=users[i]; break;
+    }
+  }
+  if(!found){ if(err)err.style.display='block'; return; }
+  if(err)err.style.display='none';
+  currentUser=found;
+  try{localStorage.setItem(SESSION_KEY,JSON.stringify({userId:found.id,nom:found.nom,role:found.role,ts:Date.now()}));}catch(e){}
+  _activerSessionCI();
+}
+
+function doLogout(){
+  currentUser=null;
+  try{localStorage.removeItem(SESSION_KEY);}catch(e){}
+  var ov=document.getElementById('login-overlay');
+  if(ov)ov.style.display='flex';
+  var badge=document.getElementById('user-badge');
+  if(badge){badge.style.display='none'; badge.innerHTML='';}
+  var pp=document.getElementById('login-pass');
+  if(pp)pp.value='';
+}
+
+function tryAutoLoginCI(){
+  try{
+    var raw=localStorage.getItem(SESSION_KEY);
+    if(!raw)return false;
+    var sess=JSON.parse(raw);
+    if(!sess||!sess.ts||!sess.userId)return false;
+    if(Date.now()-sess.ts>SESSION_TTL){localStorage.removeItem(SESSION_KEY);return false;}
+    var users=getUsers();
+    var found=null;
+    for(var i=0;i<users.length;i++){
+      if(users[i].id===sess.userId &&
+         (users[i].role==='commercial'||users[i].role==='admin')){found=users[i];break;}
+    }
+    if(!found)return false;
+    currentUser=found;
+    _activerSessionCI();
+    return true;
+  }catch(e){return false;}
+}
+
+function _activerSessionCI(){
+  var ov=document.getElementById('login-overlay');
+  if(ov)ov.style.display='none';
+  // Mettre à jour le badge
+  var badge=document.getElementById('user-badge');
+  if(badge && currentUser){
+    badge.style.display='flex';
+    var initials=currentUser.nom.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    badge.innerHTML='<div style="width:28px;height:28px;border-radius:50%;background:#F4B942;color:#0d2e1a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.72rem;flex-shrink:0">'+initials+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:1px">'
+      +'<span style="font-size:.72rem;font-weight:700;color:#fff">'+currentUser.nom+'</span>'
+      +'<span style="font-size:.62rem;color:rgba(255,255,255,.7)">'+currentUser.role+'</span>'
+      +'</div>';
+    badge.title='Connecté en tant que '+currentUser.nom+' — Cliquer pour déconnecter';
+  }
+  // Pré-remplir le champ technicien commercial
+  var techNom=document.getElementById('tech-nom');
+  if(techNom && currentUser && currentUser.role==='commercial' && !techNom.value){
+    techNom.value=currentUser.nom;
+  }
+  // Lancer l'app
+  _initApp();
+}
+
+async function _initApp(){
   document.body.insertAdjacentHTML('afterbegin',
-    '<div id="_sb_loader" style="position:fixed;inset:0;background:rgba(20,40,30,.88);display:flex;align-items:center;justify-content:center;z-index:9999;font-family:Arial,sans-serif;color:#F4C542;font-size:1.1rem;gap:12px">' +
+    '<div id="_sb_loader" style="position:fixed;inset:0;background:rgba(20,40,30,.88);display:flex;align-items:center;justify-content:center;z-index:9998;font-family:Arial,sans-serif;color:#F4C542;font-size:1.1rem;gap:12px">' +
     '<svg width="32" height="32" viewBox="0 0 32 32" style="animation:spin 1s linear infinite"><circle cx="16" cy="16" r="12" fill="none" stroke="#F4C542" stroke-width="3" stroke-dasharray="56" stroke-dashoffset="14"/></svg>' +
     'Chargement des données…</div>' +
     '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>'
   );
   await initSupabase();
-  const loader = document.getElementById('_sb_loader');
-  if(loader) loader.remove();
+  var loader=document.getElementById('_sb_loader');
+  if(loader)loader.remove();
   renderTechSelect();
+}
+
+// Init au chargement
+document.addEventListener('DOMContentLoaded', function(){
+  if(!tryAutoLoginCI()){
+    var ov=document.getElementById('login-overlay');
+    if(ov)ov.style.display='flex';
+  }
 });
 
 // ─── PSH UPDATE ──────────────────────────────────────────────────────
@@ -4388,376 +4534,4 @@ function renderPacks(){
     const rows2 = withoutPack.map(d=>`
       <tr>
         <td>${d.date||'—'}</td>
-        <td style="font-weight:bold">${d.ref||'—'}</td>
-        <td>${d.client||'—'}</td>
-        <td style="text-align:right">${(d.P_inst_kW||0).toFixed(2)} kWc</td>
-        <td style="text-align:right">${fmtM(d.cost_install)} MFCFA</td>
-        <td>${d.techNom&&d.techNom!=='—'?d.techNom:'—'}</td>
-        <td><span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:8px;font-size:.72rem;font-weight:bold"> Estimation générique</span></td>
-      </tr>`).join('');
-    document.getElementById('pk-no-pack-wrap').innerHTML=`
-      <table class="dtable">
-        <thead><tr><th>Date</th><th>Référence</th><th>Client</th><th>kWc</th><th>Coût estimé</th><th>Technicien</th><th>Pack</th></tr></thead>
-        <tbody>${rows2}</tbody>
-      </table>`;
-  }
-}
-
-/* ─── ONGLET TECHNICIENS ─────────────────────── */
-function renderTechniciens(){
-  const techAgg = {};
-  filtered.forEach(d=>{
-    const t = (d.techNom&&d.techNom!=='—') ? d.techNom : '(Non renseigné)';
-    if(!techAgg[t]) techAgg[t]={nom:t,count:0,kwc:0,ca:0,rois:[],installe:0,pack:0};
-    techAgg[t].count++;
-    techAgg[t].kwc  += (d.P_inst_kW||0);
-    techAgg[t].ca   += (d.cost_install||0);
-    if(d.roi>0) techAgg[t].rois.push(d.roi);
-    if(statut(d)==='valide_installe') techAgg[t].installe++;
-    if(d.packNom) techAgg[t].pack++;
-  });
-  const techs = Object.values(techAgg).sort((a,b)=>b.count-a.count);
-
-  // KPIs
-  document.getElementById('tc-count').textContent = techs.filter(t=>t.nom!=='(Non renseigné)').length;
-  const topCA   = [...techs].sort((a,b)=>b.ca-a.count)[0];
-  const topNb   = techs[0];
-  const topInst = [...techs].sort((a,b)=>b.installe-a.installe)[0];
-  document.getElementById('tc-top-ca').textContent   = topCA   ? topCA.nom   : '—';
-  document.getElementById('tc-top-nb').textContent   = topNb   ? topNb.nom   : '—';
-  document.getElementById('tc-top-inst').textContent = topInst ? topInst.nom : '—';
-
-  // Charts
-  destroyChart('ch-tc-nb');
-  destroyChart('ch-tc-ca');
-  const tcNames  = techs.map(t=>t.nom);
-  const tcColors = techs.map((_,i)=>TYPE_COLORS[i%TYPE_COLORS.length]);
-
-  charts['ch-tc-nb'] = new Chart(document.getElementById('ch-tc-nb'),{
-    type:'bar',
-    data:{labels:tcNames,datasets:[{label:'Dimensionnements',data:techs.map(t=>t.count),
-      backgroundColor:tcColors,borderRadius:5}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{ticks:{font:{size:11}}}}}
-  });
-
-  charts['ch-tc-ca'] = new Chart(document.getElementById('ch-tc-ca'),{
-    type:'bar',
-    data:{labels:tcNames,datasets:[{label:'CA (MFCFA)',data:techs.map(t=>parseFloat(fmtM(t.ca))),
-      backgroundColor:tcColors,borderRadius:5}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true},x:{ticks:{font:{size:11}}}}}
-  });
-
-  // Cartes techniciens
-  const tcColors2 = ['#1a5c30','#1565C0','#6A1B9A','#E65100','#880E4F','#00695C','#4E342E'];
-  document.getElementById('tc-cards').innerHTML = techs.map((t,i)=>{
-    const avgRoi = t.rois.length ? (t.rois.reduce((a,v)=>a+v,0)/t.rois.length) : 0;
-    const tx = Math.round(t.installe/t.count*100);
-    return `<div class="metric-card" style="border-top-color:${tcColors2[i%tcColors2.length]}">
-      <div class="metric-card-title">
-        <span style="background:${tcColors2[i%tcColors2.length]};color:#fff;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:900">
-          ${t.nom.charAt(0).toUpperCase()}
-        </span>
-        ${t.nom}
-      </div>
-      <div class="metric-card-body">
-        <div><div class="mc-kv"><span>Dimensionnements</span><span>${t.count}</span></div>
-          <div class="mc-kv"><span>kWc total</span><span>${t.kwc.toFixed(1)}</span></div>
-          <div class="mc-kv"><span>CA total</span><span>${fmtM(t.ca)} MFCFA</span></div></div>
-        <div><div class="mc-kv"><span>ROI moyen</span><span>${avgRoi>0?avgRoi.toFixed(1)+' ans':'—'}</span></div>
-          <div class="mc-kv"><span>Installés</span><span>${t.installe} (${tx}%)</span></div>
-          <div class="mc-kv"><span>Packs TEVIA</span><span>${t.pack}</span></div></div>
-      </div>
-      <div style="margin-top:10px;background:#e0e0e0;border-radius:6px;height:6px">
-        <div style="background:${tcColors2[i%tcColors2.length]};border-radius:6px;height:6px;width:${tx}%;transition:width .5s"></div>
-      </div>
-      <div style="font-size:.68rem;color:#888;margin-top:3px;text-align:right">${tx}% taux installation</div>
-    </div>`;
-  }).join('');
-
-  // Table techniciens
-  const rows = techs.map((t,i)=>{
-    const avgRoi = t.rois.length ? (t.rois.reduce((a,v)=>a+v,0)/t.rois.length) : 0;
-    const tx = t.count > 0 ? Math.round(t.installe/t.count*100) : 0;
-    return `<tr>
-      <td style="font-weight:bold;color:${tcColors2[i%tcColors2.length]}">${t.nom}</td>
-      <td style="text-align:center"><b>${t.count}</b></td>
-      <td style="text-align:right">${t.kwc.toFixed(1)} kWc</td>
-      <td style="text-align:right">${fmtM(t.ca)} MFCFA</td>
-      <td style="text-align:right">${fmtM(t.ca/t.count)} MFCFA</td>
-      <td style="text-align:center">${avgRoi>0?avgRoi.toFixed(1)+' ans':'—'}</td>
-      <td style="text-align:center">${t.installe}</td>
-      <td style="text-align:center">${t.pack}</td>
-      <td style="text-align:center">
-        <span style="background:${tx>=50?'#d4edda':tx>=25?'#fff3cd':'#f8d7da'};
-          color:${tx>=50?'#155724':tx>=25?'#856404':'#721c24'};
-          padding:2px 8px;border-radius:8px;font-size:.72rem;font-weight:bold">${tx}%</span>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('tc-table-wrap').innerHTML=`
-    <table class="dtable">
-      <thead><tr>
-        <th>Technicien</th><th style="text-align:center">Devis</th>
-        <th style="text-align:right">kWc total</th><th style="text-align:right">CA total</th>
-        <th style="text-align:right">CA moyen</th><th style="text-align:center">ROI moy.</th>
-        <th style="text-align:center">Installés</th><th style="text-align:center">Packs</th>
-        <th style="text-align:center">Taux install.</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
-
-/* ─── ONGLET SEGMENTATION ────────────────────── */
-function renderSegmentation(){
-  const ea = filtered.filter(d=>statut(d)==='en_attente');
-  const va = filtered.filter(d=>statut(d)==='valide_attente');
-  const vi = filtered.filter(d=>statut(d)==='valide_installe');
-  const total = filtered.length || 1;
-
-  // Entonnoir
-  const steps = [
-    {label:'Total devis créés',count:filtered.length,ca:filtered.reduce((a,d)=>a+(d.cost_install||0),0),color:'#6c757d'},
-    {label:' Validés (attente + installés)',count:va.length+vi.length,ca:[...va,...vi].reduce((a,d)=>a+(d.cost_install||0),0),color:'#3498db'},
-    {label:' Validés et installés',count:vi.length,ca:vi.reduce((a,d)=>a+(d.cost_install||0),0),color:'#28a745'},
-  ];
-  document.getElementById('seg-funnel').innerHTML = steps.map(s=>`
-    <div class="funnel-step" style="background:${s.color}18;border-left:5px solid ${s.color}">
-      <div>
-        <div style="font-weight:bold;font-size:.9rem;color:${s.color}">${s.label}</div>
-        <div style="font-size:.75rem;color:#555;margin-top:2px">CA : ${fmtM(s.ca)} MFCFA</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:1.8rem;font-weight:900;color:${s.color}">${s.count}</div>
-        <div style="font-size:.72rem;color:#888">${Math.round(s.count/total*100)}% du total</div>
-      </div>
-    </div>`).join('');
-
-  // Charts segmentation
-  destroyChart('ch-seg-statut');
-  destroyChart('ch-seg-ca');
-  const sts = ['en_attente','valide_attente','valide_installe'];
-  const groups = {en_attente:ea,valide_attente:va,valide_installe:vi};
-
-  charts['ch-seg-statut'] = new Chart(document.getElementById('ch-seg-statut'),{
-    type:'pie',
-    data:{labels:sts.map(s=>STATUT_ICONS[s]+' '+STATUT_LABELS[s]),
-      datasets:[{data:sts.map(s=>groups[s].length),
-        backgroundColor:sts.map(s=>STATUT_COLORS[s]),borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}
-  });
-
-  charts['ch-seg-ca'] = new Chart(document.getElementById('ch-seg-ca'),{
-    type:'bar',
-    data:{labels:sts.map(s=>STATUT_LABELS[s]),
-      datasets:[{label:'MFCFA',data:sts.map(s=>parseFloat(fmtM(groups[s].reduce((a,d)=>a+(d.cost_install||0),0)))),
-        backgroundColor:sts.map(s=>STATUT_COLORS[s]),borderRadius:6}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true}}}
-  });
-
-  renderSegTable();
-}
-
-function renderSegTable(){
-  // Uses global 'filtered' array (already filtered by period + main filters)
-  const data = filtered.slice().sort((a,b)=>b.id-a.id);
-
-  if(!data.length){
-    document.getElementById('seg-table-wrap').innerHTML=
-      '<div class="empty"><div class="empty-icon"></div><p>Aucun devis pour cette période.</p></div>';
-    return;
-  }
-
-  const rows = data.map(d=>`
-    <tr>
-      <td>${d.date||d.dateISO?new Date(d.dateISO||d.date).toLocaleDateString('fr-FR'):'—'}</td>
-      <td style="font-weight:bold;font-size:.8rem">${d.ref||'—'}</td>
-      <td>${d.client||d.clientNom||'—'}</td>
-      <td>${d.ville||'—'}</td>
-      <td>${d.techNom&&d.techNom!=='—'?d.techNom:'—'}</td>
-      <td style="text-align:right">${(d.P_inst_kW||d.kwc||0).toFixed(2)} kWc</td>
-      <td style="font-size:.72rem;color:${d.packNom?'inherit':'#aaa'}">${d.packNom||'—'}</td>
-      <td style="text-align:right;font-weight:bold">${fmtM(d.cost_install)} MFCFA</td>
-      <td>
-        <select class="status-sel ${statutClass(statut(d))}"
-          onchange="updateStatut(${d.id},this.value);this.className='status-sel '+statutClass(this.value)">
-          <option value="en_attente"    ${statut(d)==='en_attente'   ?'selected':''}> Non validé</option>
-          <option value="valide_attente"  ${statut(d)==='valide_attente' ?'selected':''}> Validé – Attente</option>
-          <option value="valide_installe" ${statut(d)==='valide_installe'?'selected':''}> Installé</option>
-        </select>
-      </td>
-      <td style="text-align:center;white-space:nowrap">
-        <button class="view-btn" onclick="viewRecord(${d.id})" title="Consulter"></button>
-        <button class="del-btn"  onclick="deleteRecord(${d.id})" title="Supprimer"></button>
-      </td>
-    </tr>`).join('');
-
-  document.getElementById('seg-table-wrap').innerHTML=`
-    <table class="dtable">
-      <thead><tr>
-        <th>Date</th><th>Référence</th><th>Client</th><th>Ville</th><th>Technicien</th>
-        <th>kWc</th><th>Pack TEVIA</th><th>CA</th><th>Statut</th><th></th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-}
-
-function kv(label, val){
-  if(!val||val==='—'||val==='undefined'||val==='null'||val===undefined) return '';
-  return `<div style="display:flex;justify-content:space-between;font-size:.78rem;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.06)">
-    <span style="color:#555;flex-shrink:0;margin-right:8px">${label}</span>
-    <span style="font-weight:bold;text-align:right">${val}</span></div>`;
-}
-
-function viewRecord(id){
-  const d = getDB().find(r=>r.id===id);
-  if(!d){ alert('Enregistrement introuvable.'); return; }
-  const GL = {'off-grid':'Off-Grid (Autonome)','on-grid':'On-Grid (Réseau)','hybride':'Hybride'};
-  const st = statut(d);
-  const stColor = STATUT_COLORS[st]||'#888';
-  const stBg    = STATUT_BG[st]||'#f0f0f0';
-
-  const loadsHtml = (d.loads||[]).map((l,i)=>
-    `<tr style="background:${i%2===0?'#f8fffe':'#fff'}">
-      <td style="padding:4px 8px">${l.name||'—'}</td>
-      <td style="padding:4px 8px">${l.cat||'—'}</td>
-      <td style="padding:4px 8px;text-align:center">${l.P||0} W × ${l.qty||1}</td>
-      <td style="padding:4px 8px;text-align:center">${l.h||0} h/j</td>
-      <td style="padding:4px 8px;text-align:right;font-weight:bold">${fmt(l.wh||0)} Wh/j</td>
-    </tr>`).join('');
-
-  const totalWh = (d.loads||[]).reduce((s,l)=>s+(l.wh||0),0);
-
-  const modal = document.createElement('div');
-  modal.id='modal-overlay';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
-  modal.onclick=e=>{ if(e.target===modal) closeModal(); };
-
-  modal.innerHTML=`
-    <div style="background:#fff;border-radius:14px;max-width:860px;width:100%;padding:28px;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.25);margin:auto">
-      <button onclick="closeModal()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:#888">&#x2715;</button>
-
-      <!-- En-tête -->
-      <div style="border-bottom:3px solid #1a5c30;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px">
-        <div>
-          <div style="font-size:1.05rem;font-weight:900;color:#0d2e1a">RAPPORT DE DIMENSIONNEMENT PV</div>
-          <div style="font-size:.8rem;color:#555;margin-top:3px">${d.typeInst||'—'} — ${GL[d.gridType]||d.gridType||'—'} — Couverture : ${d.coverageLabel||'—'}</div>
-        </div>
-        <div style="text-align:right;font-size:.8rem">
-          <div style="font-size:1rem;font-weight:bold;color:#0d2e1a">${d.ref||'—'}</div>
-          <div>Établi le ${d.date||'—'}</div>
-          ${d.techNom&&d.techNom!=='—'?`<div style="margin-top:2px">Technicien : <b>${d.techNom}</b>${d.techTel&&d.techTel!=='—'?' — '+d.techTel:''}</div>`:''}
-          <div style="margin-top:6px;display:inline-block;padding:3px 12px;border-radius:10px;font-size:.75rem;font-weight:bold;background:${stBg};color:${stColor};border:1.5px solid ${stColor}">${STATUT_ICONS[st]||''} ${STATUT_LABELS[st]||st}</div>
-        </div>
-      </div>
-
-      <!-- Client + Site -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div style="background:#f0faf4;border-radius:8px;padding:14px">
-          <div style="font-weight:bold;color:#1a5c30;margin-bottom:8px;font-size:.78rem;text-transform:uppercase">&#x1F464; Client</div>
-          ${kv('Nom',d.client)}${kv('Téléphone',d.tel)}${kv('Email',d.email)}${kv('Adresse',d.adresse)}
-        </div>
-        <div style="background:#f0faf4;border-radius:8px;padding:14px">
-          <div style="font-weight:bold;color:#1a5c30;margin-bottom:8px;font-size:.78rem;text-transform:uppercase">&#x1F4CD; Site</div>
-          ${kv('Localisation',d.ville)}${kv('Type',d.typeInst)}${kv('Système',GL[d.gridType]||d.gridType)}${kv('PSH',(d.psh||'—')+' h/j')}
-        </div>
-      </div>
-
-      <!-- Résultats techniques -->
-      <div style="background:#1a5c30;color:#fff;border-radius:8px;padding:16px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;text-align:center">
-        ${[
-          ['Puissance crête',(d.kwc||0).toFixed(2)+' kWc'],
-          ['Énergie stockée',(d.kwh||0).toFixed(2)+' kWh'],
-          ['PSH site',(d.psh||'—')+' h/j'],
-          ['Coût installation',fmt(d.cost_install||0)+' FCFA'],
-          ['Économies/an',fmt(d.savings_fcfa||0)+' FCFA'],
-          ['ROI estimé',d.roi?d.roi.toFixed(1)+' ans':'—']
-        ].map(([l,v])=>`<div><div style="font-size:.68rem;opacity:.75;margin-bottom:3px">${l}</div><div style="font-size:1rem;font-weight:900">${v}</div></div>`).join('')}
-      </div>
-
-      ${d.packNom?`
-      <!-- Pack TEVIA -->
-      <div style="background:#e8f5e9;border:2px solid #4CAF50;border-radius:8px;padding:14px;margin-bottom:16px">
-        <div style="font-weight:bold;color:#1a5c30;margin-bottom:8px;font-size:.82rem"> Pack TEVIA sélectionné</div>
-        <div style="font-size:.8rem"><b>${d.packNom}</b>${d.packConfig?` — <span style="color:#555">${d.packConfig}</span>`:''}</div>
-      </div>`:''}
-
-      ${loadsHtml?`
-      <!-- Bilan des charges -->
-      <div style="margin-bottom:16px">
-        <div style="font-weight:bold;color:#1a5c30;margin-bottom:8px;font-size:.82rem;border-bottom:2px solid #e0f0e8;padding-bottom:4px"> Bilan des charges — ${fmt(totalWh)} Wh/j total</div>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:.78rem">
-            <thead><tr style="background:#0d2e1a;color:#fff">
-              <th style="padding:5px 8px;text-align:left">Équipement</th>
-              <th style="padding:5px 8px;text-align:left">Catégorie</th>
-              <th style="padding:5px 8px;text-align:center">Puissance</th>
-              <th style="padding:5px 8px;text-align:center">Durée</th>
-              <th style="padding:5px 8px;text-align:right">Énergie/j</th>
-            </tr></thead>
-            <tbody>${loadsHtml}</tbody>
-          </table>
-        </div>
-      </div>`:''}
-
-      <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
-        <select class="status-sel ${statutClass(st)}" id="modal-statut-sel"
-          onchange="updateStatut(${d.id},this.value);this.className='status-sel '+statutClass(this.value)">
-          <option value="en_attente"    ${st==='en_attente'   ?'selected':''}> Non validé</option>
-          <option value="valide_attente"  ${st==='valide_attente' ?'selected':''}> Validé – Attente</option>
-          <option value="valide_installe" ${st==='valide_installe'?'selected':''}> Installé</option>
-        </select>
-        <div style="display:flex;gap:8px">
-          <button onclick="deleteRecord(${d.id});closeModal()"
-            style="padding:7px 14px;background:#fff0f0;color:#c00;border:1.5px solid #f8b4b4;border-radius:8px;cursor:pointer;font-weight:bold"> Supprimer</button>
-          <button onclick="closeModal()"
-            style="padding:7px 20px;background:var(--green-mid);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold">Fermer</button>
-        </div>
-      </div>
-    </div>`;
-
-  document.body.appendChild(modal);
-}
-
-function closeModal(){
-  const m = document.getElementById('modal-overlay');
-  if(m) m.remove();
-}
-
-/* ─── DELETE ─────────────────────────────────── */
-function deleteRecord(id){
-  if(!confirm('Supprimer ce dimensionnement ? Cette action est irréversible.')) return;
-  allData = allData.filter(x=>x.id!==id);
-  saveDB(allData);
-  render();
-}
-
-/* ─── EXPORTS ────────────────────────────────── */
-function triggerDownload(content, filename, type='text/csv;charset=utf-8'){
-  const BOM = type.includes('csv') ? '' : '';
-  const blob = new Blob([BOM + content], {type});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 2000);
-}
-
-function buildCSVRows(data){
-  const header = ['ID','Date','Client','Ville','Technicien','Type','Système',
-    'Puissance kWc','Stockage kWh','Coût FCFA','Économies FCFA/an','ROI ans',
-    'Pack TEVIA','Config Pack','Statut'];
-  const rows = data.map(d=>[
-    d.id,
-    d.dateISO ? new Date(d.dateISO).toLocaleDateString('fr-FR') : '',
-    d.clientNom||d.client||'', d.ville||'', d.techNom||'',
-    d.type||d.typeInst||'', d.gridType||'',
-    (d.kwc||d.P_inst_kW||0).toFixed(2),
-    (d.kwh||d.E_stock_kWh||0).toFixed(2),
-    Math.round(d.cost_install||0),
-    Math.round(d.savings_fcfa||0),
-    d.roi ? d.roi.toFixed(2) : '',
-    d.packNom||'', d.packConfig||'',
-    STATUT_LABEL
+        <td style="font-weigh
