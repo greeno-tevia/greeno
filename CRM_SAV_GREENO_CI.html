@@ -24,10 +24,6 @@ header p{font-size:.76rem;opacity:.8;margin-top:2px;color:#b8ffd0}
 header .header-right{margin-left:auto;text-align:right;font-size:.72rem;opacity:.7}
 
 /* SECTION NAV */
-.app-nav{background:#0f3d26;display:flex;align-items:center;gap:4px;padding:4px 16px;border-bottom:1px solid rgba(255,255,255,.12)}
-.app-nav-link{color:rgba(255,255,255,.65);text-decoration:none;font-size:.73rem;font-weight:600;padding:4px 12px;border-radius:4px;transition:background .15s,color .15s}
-.app-nav-link:hover{background:rgba(255,255,255,.12);color:#fff}
-.app-nav-link.active{background:rgba(255,255,255,.18);color:#fff}
 .section-nav{background:#0a2218;display:flex;padding:0 28px;border-bottom:1px solid rgba(255,255,255,.08)}
 .section-btn{background:none;border:none;border-bottom:3px solid transparent;color:rgba(255,255,255,.55);
   cursor:pointer;font-size:.82rem;font-weight:700;padding:11px 22px;display:flex;align-items:center;
@@ -743,11 +739,6 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
     </div>
   </div>
 </header>
-<div class="app-nav">
-  <a class="app-nav-link" href="GREENO_CI_COMPLET.html">⚡ Dimensionnement</a>
-  <a class="app-nav-link active" href="CRM_SAV_GREENO_CI.html">👥 CRM &amp; SAV</a>
-  <a class="app-nav-link" href="GREENO_VISITE_TECHNIQUE.html">🔧 Visite Technique</a>
-</div>
 
 <!-- ██ SECTION NAV ██ -->
 <div class="section-nav">
@@ -4915,4 +4906,24 @@ function showNotif(msg) {
               <label>Rôle</label>
               <select id="nu-role">
                 <option value="commercial">Commercial</option>
-            
+                <option value="technicien">Technicien</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="login-field" style="margin-bottom:0"><label>Mot de passe</label><input type="password" id="nu-pwd" placeholder="•••••"></div>
+          </div>
+          <button class="btn btn-g" style="margin-top:12px" onclick="addUser()">➕ Ajouter</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>🚪 Session</h3>
+        <button class="btn" style="background:#D32F2F;color:#fff;border:none" onclick="doLogout()">🔓 Se déconnecter</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+</body>
+</html>
