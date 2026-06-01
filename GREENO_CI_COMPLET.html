@@ -1172,15 +1172,41 @@ footer{background:var(--green-dark);color:rgba(255,255,255,.5);text-align:center
 
 <!-- ═══════════ TAB 5 : RAPPORT ═══════════ -->
 <div class="tab-c" id="tab-rapport">
+
+  <!-- ── Bloc Planification RDV ── -->
+  <div id="rdv-block" style="background:#f0f7f2;border:1px solid #b2d8bf;border-radius:8px;padding:14px 18px;margin-bottom:14px;display:none">
+    <div style="font-size:.85rem;font-weight:700;color:#1a5c30;margin-bottom:10px;letter-spacing:.2px;border-bottom:1px solid #c8e6d0;padding-bottom:6px">
+      PLANIFICATION DE LA VISITE TECHNIQUE
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:10px">
+      <div>
+        <label style="font-size:.75rem;font-weight:600;color:#444;display:block;margin-bottom:4px">Date de la visite *</label>
+        <input type="date" id="rdv-date" style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:.84rem">
+      </div>
+      <div>
+        <label style="font-size:.75rem;font-weight:600;color:#444;display:block;margin-bottom:4px">Heure</label>
+        <input type="time" id="rdv-heure" style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:.84rem">
+      </div>
+      <div>
+        <label style="font-size:.75rem;font-weight:600;color:#444;display:block;margin-bottom:4px">Technicien assigné</label>
+        <input type="text" id="rdv-tech-display" readonly style="width:100%;padding:7px 10px;border:1px solid #e0e0e0;border-radius:6px;font-size:.84rem;background:#fafafa;color:#555">
+      </div>
+    </div>
+    <div>
+      <label style="font-size:.75rem;font-weight:600;color:#444;display:block;margin-bottom:4px">Commentaire commercial</label>
+      <textarea id="rdv-commentaire" rows="2" placeholder="Besoins spécifiques, conditions d'accès, remarques..." style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:.82rem;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+  </div>
+
   <div style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-    <button class="btn btn-p" onclick="window.print()"> Imprimer / PDF</button>
-    <button class="btn btn-g" onclick="saveReport()" id="btn-save-report" style="background:linear-gradient(135deg,#1a5c30,#3dbf6e)"> Sauvegarder dans la base</button>
-    <button class="btn btn-outline" onclick="goTab(3)">← Retour aux résultats</button>
+    <button class="btn btn-p" onclick="window.print()">Imprimer / PDF</button>
+    <button class="btn btn-g" onclick="saveReport()" id="btn-save-report" style="background:linear-gradient(135deg,#1a5c30,#3dbf6e)">Sauvegarder dans la base</button>
+    <button class="btn btn-outline" onclick="goTab(3)">Retour aux résultats</button>
     <a href="#" onclick="switchSection('dashboard'); return false;" class="btn btn-outline" style="border-color:#3dbf6e;color:#1a5c30">Tableau de Bord</a>
     <span style="font-size:.75rem;color:#888">Ctrl+P pour exporter en PDF</span>
   </div>
   <div id="save-toast" style="display:none;background:#1a5c30;color:#fff;padding:10px 18px;border-radius:8px;font-size:.85rem;font-weight:bold;margin-bottom:10px">
-    Rapport sauvegardé dans la base de données GREENO CI !
+    Rapport sauvegardé — prospect transmis au CRM.
   </div>
   <div class="rpt" id="rapport-content">
     <div style="text-align:center;padding:30px;color:#aaa">
@@ -2879,8 +2905,23 @@ function saveReport(){
     );
     const today_iso = new Date().toISOString().slice(0, 10);
     const nowHH     = String(new Date().getHours()).padStart(2,'0') + ':' + String(new Date().getMinutes()).padStart(2,'0');
+    // Lire les champs de planification RDV saisis par le commercial
+    const rdvDate        = document.getElementById('rdv-date')?.value        || today_iso;
+    const rdvHeure       = document.getElementById('rdv-heure')?.value       || nowHH;
+    const rdvCommentaire = document.getElementById('rdv-commentaire')?.value || '';
+
+    // Générer un ref_prospect unique et traçable
+    const existingMax = existingProspects.reduce((m, p) => {
+      const n = parseInt((p.ref_prospect || '').replace('PRO', '')) || 0;
+      return Math.max(m, n);
+    }, 0);
+    const ref_prospect = proIdx >= 0 && existingProspects[proIdx].ref_prospect
+      ? existingProspects[proIdx].ref_prospect
+      : 'PRO' + String(existingMax + 1).padStart(4, '0');
+
     const proEntry  = {
       id             : proIdx >= 0 ? existingProspects[proIdx].id : 'PRO-DIM-' + Date.now(),
+      ref_prospect   : ref_prospect,
       nom            : nom,
       telephone      : record.tel || '',
       email          : record.email || '',
@@ -2890,17 +2931,31 @@ function saveReport(){
       paiement       : '',
       pack           : record.packNom || (record.P_inst_kW?.toFixed(2) + ' kWc'),
       budget         : record.cost_install ? record.cost_install.toLocaleString('fr-FR') + ' FCFA' : '',
-      rdv_date       : today_iso,
-      rdv_heure      : nowHH,
+      rdv_date       : rdvDate,
+      rdv_heure      : rdvHeure,
+      rdv_commentaire: rdvCommentaire,
       tech           : record.techNom || '',
       statut         : 'RDV Planifié',
-      source         : record.source || 'Dimensionnement GREENO CI',
+      source         : record.source ? record.source : 'Dimensionnement Terrain',
       notes          : 'Rapport ' + ref + ' — ' + record.P_inst_kW?.toFixed(2) + ' kWc · '
                      + record.n_inv + ' onduleur(s) · '
                      + (record.n_bat > 0 ? record.n_bat + ' batterie(s)' : 'sans stockage'),
-      date_creation  : today_iso,
-      heure_creation : nowHH,
+      date_creation  : proIdx >= 0 ? (existingProspects[proIdx].date_creation || today_iso) : today_iso,
+      heure_creation : proIdx >= 0 ? (existingProspects[proIdx].heure_creation || nowHH) : nowHH,
+      date_maj       : today_iso,
+      heure_maj      : nowHH,
       ref_dim        : ref,
+      // Champs techniques pour Power BI
+      P_inst_kW      : record.P_inst_kW,
+      n_panels       : record.N_panels,
+      n_inv          : record.n_inv,
+      n_bat          : record.n_bat,
+      bat_kWh        : record.bat_kWh,
+      E_annual_kWh   : record.E_annual_kWh,
+      cost_install   : record.cost_install,
+      packNom        : record.packNom,
+      gridType       : record.gridType,
+      coverageLabel  : record.coverageLabel,
     };
     if (proIdx >= 0) { existingProspects[proIdx] = proEntry; }
     else             { existingProspects.push(proEntry); }
@@ -3541,6 +3596,9 @@ function buildReport(){
   </div>
 
 `;
+  // ── Afficher le bloc planification RDV et pré-remplir le technicien ──
+  document.getElementById('rdv-block').style.display = 'block';
+  document.getElementById('rdv-tech-display').value  = techInfo.nom !== '—' ? techInfo.nom : '';
 }
 </script>
 
@@ -4702,78 +4760,4 @@ function buildCSVRows(data){
     Math.round(d.savings_fcfa||0),
     d.roi ? d.roi.toFixed(2) : '',
     d.packNom||'', d.packConfig||'',
-    STATUT_LABELS[statut(d)] || statut(d)
-  ].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';'));
-  return [header.join(';'), ...rows].join('\r\n');
-}
-
-function exportCSV(){
-  if(!filtered.length){ alert('Aucune donnée filtrée à exporter.'); return; }
-  const date = new Date().toISOString().slice(0,10);
-  triggerDownload(buildCSVRows(filtered), `GREENO_Export_Filtré_${date}.csv`);
-}
-
-function exportAllCSV(){
-  if(!allData.length){ alert('Aucune donnée à exporter.'); return; }
-  const date = new Date().toISOString().slice(0,10);
-  triggerDownload(buildCSVRows(allData), `GREENO_Export_Complet_${date}.csv`);
-}
-
-function exportJSON(){
-  if(!allData.length){ alert('Aucune donnée à exporter.'); return; }
-  const date = new Date().toISOString().slice(0,10);
-  const payload = JSON.stringify({
-    version: 1,
-    exportDate: new Date().toISOString(),
-    source: 'GREENO Dashboard CI',
-    count: allData.length,
-    data: allData
-  }, null, 2);
-  triggerDownload(payload, `GREENO_Base_${date}.json`, 'application/json;charset=utf-8');
-}
-
-function importJSON(input){
-  const file = input.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      let parsed = JSON.parse(e.target.result);
-      const incoming = Array.isArray(parsed) ? parsed : (parsed.data || []);
-      if(!incoming.length){ alert('Fichier JSON vide ou format non reconnu.'); return; }
-
-      let added = 0, updated = 0;
-      const localMap = {};
-      allData.forEach(d => { localMap[d.id] = d; });
-
-      incoming.forEach(rec => {
-        if(!rec.id) return;
-        if(localMap[rec.id]){
-          if(!rec.statut && localMap[rec.id].statut) rec.statut = localMap[rec.id].statut;
-          localMap[rec.id] = {...localMap[rec.id], ...rec};
-          updated++;
-        } else {
-          localMap[rec.id] = rec;
-          added++;
-        }
-      });
-
-      allData = Object.values(localMap).sort((a,b) => b.id - a.id);
-      saveDB(allData);
-      render();
-      alert(`Import réussi \n• ${added} nouveau(x) enregistrement(s) ajouté(s)\n• ${updated} mis à jour\n• Total base : ${allData.length} dimensionnements`);
-    } catch(err){
-      alert('Erreur lors de la lecture du fichier JSON :\n' + err.message);
-    }
-    input.value = '';
-  };
-  reader.readAsText(file);
-}
-
-/* ─── INIT ───────────────────────────────────── */
-// render() est appelé via goTab(5) pour garantir que le canvas est visible
-// window.addEventListener('DOMContentLoaded', render);
-</script>
-</body>
-</html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    STATUT_LABEL
