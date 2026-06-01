@@ -1818,11 +1818,25 @@ async function sbSave(key, val) {
 // et pré-remplir le cache + localStorage
 async function initSupabase() {
   if (!_SB_READY) return;
-  const keys = ['crm_clients','crm_tickets','crm_intervs','grn_prospects','grn_activites'];
-  await Promise.all(keys.map(async k => {
+  // CRM data: toujours écraser avec Supabase (source de vérité)
+  const crmKeys = ['crm_clients','crm_tickets','crm_intervs'];
+  await Promise.all(crmKeys.map(async k => {
     const val = await sbLoad(k, []);
     try { localStorage.setItem(k, JSON.stringify(val)); } catch(e){}
   }));
+  // grn_prospects / grn_activites : MERGE local + Supabase
+  // (GREENO_CI écrit dans ces clés; on fusionne pour ne pas écraser)
+  for (const k of ['grn_prospects','grn_activites']) {
+    const remoteVal = await sbLoad(k, []);
+    let localVal = [];
+    try { localVal = JSON.parse(localStorage.getItem(k) || '[]'); } catch(e){}
+    // Merge by id : local wins (plus récent)
+    const map = {};
+    remoteVal.forEach(function(p){ if(p && p.id) map[p.id] = p; });
+    localVal.forEach(function(p){ if(p && p.id) map[p.id] = p; });
+    const merged = Object.values(map);
+    try { localStorage.setItem(k, JSON.stringify(merged)); } catch(e){}
+  }
 }
 
 function load(key, def=[]) {
@@ -3182,16 +3196,8 @@ function doLogin() {
 function doLogout() {
   currentUser = null;
   try { localStorage.removeItem(SESSION_KEY); } catch(e){}
-  var overlay = document.getElementById('login-overlay');
-  if (overlay) overlay.style.display = 'flex';
-  var badge = document.getElementById('user-badge');
-  if (badge) badge.style.display = 'none';
-  var passEl = document.getElementById('login-pass');
-  if (passEl) passEl.value = '';
-  var userEl = document.getElementById('login-user');
-  if (userEl) userEl.value = '';
-  var modal = document.getElementById('modal-settings');
-  if (modal) modal.style.display = 'none';
+  // Force full page reload — garantit l'affichage du login
+  window.location.reload();
 }
 
 function tryAutoLogin() {
