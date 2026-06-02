@@ -465,6 +465,24 @@ textarea{resize:vertical;min-height:80px}
       <div style="margin-top:12px"><label>Justification</label>
         <textarea id="v-corr-notes" rows="2"></textarea>
       </div>
+      <!-- Bandeau dynamique recalcul -->
+      <div id="pack-suggestion-banner" style="display:none;margin-top:14px;background:linear-gradient(135deg,#e8f5ee,#f0faf4);border:1.5px solid #2C6E49;border-radius:9px;padding:12px 16px;font-size:.8rem">
+        <div style="font-weight:800;color:#1a5c30;margin-bottom:8px;font-size:.82rem">&#x26a1; Recalcul automatique</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div style="background:#fff;border-radius:6px;padding:8px 10px;border:1px solid #c8e6c9;text-align:center">
+            <div style="font-size:.68rem;color:#666;margin-bottom:2px">Puissance corrig&#xe9;e</div>
+            <div id="banner-kwc" style="font-weight:800;color:#1a5c30;font-size:.95rem">—</div>
+          </div>
+          <div style="background:#fff;border-radius:6px;padding:8px 10px;border:1px solid #c8e6c9;text-align:center">
+            <div style="font-size:.68rem;color:#666;margin-bottom:2px">Production annuelle</div>
+            <div id="banner-prod" style="font-weight:800;color:#1a5c30;font-size:.95rem">—</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#1a5c30,#2C6E49);border-radius:6px;padding:8px 10px;text-align:center">
+            <div style="font-size:.68rem;color:#a0d4b0;margin-bottom:2px">Pack TEVIA adapt&#xe9;</div>
+            <div id="banner-pack" style="font-weight:800;color:#F4C542;font-size:.8rem">—</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -482,6 +500,7 @@ textarea{resize:vertical;min-height:80px}
     <div class="row-btns">
       <button class="btn btn-p" onclick="saveVisite()">Enregistrer la visite</button>
       <button class="btn btn-gold" onclick="generateReport()">Generer le rapport complet</button>
+      <button id="btn-pv-reception" class="btn" onclick="openPvReception(CURRENT ? CURRENT.id : null)" style="display:none;background:linear-gradient(135deg,#0d2e1a,#1a5c30);color:#F4C542;border:none;font-weight:700">&#x1f4cb; PV de r&#xe9;ception</button>
       <button class="btn btn-outline" onclick="backToList()">Retour</button>
       <span id="save-msg" style="font-size:.78rem;color:var(--green);font-weight:bold"></span>
     </div>
@@ -1157,6 +1176,20 @@ function selectDevis(id){
   s('v-ac-passages',v.acPassages);   s('v-ac-notes',v.acNotes);
   s('v-corr-panels',v.corrPanels);   s('v-corr-inv',v.corrInv);
   s('v-corr-bat',v.corrBat);         s('v-corr-notes',v.corrNotes);
+  // Bind live recalcul banner
+  var corrPanInput = document.getElementById('v-corr-panels');
+  if(corrPanInput){
+    corrPanInput.removeEventListener('input', updateCorrBanner);
+    corrPanInput.addEventListener('input', updateCorrBanner);
+  }
+  // Show banner + PV button based on current data
+  setTimeout(updateCorrBanner, 50);
+  var btnPV = document.getElementById('btn-pv-reception');
+  if(btnPV){
+    var statut = (d.statut||'').toLowerCase();
+    btnPV.style.display = (statut === 'à installer' || statut === 'a installer' || statut === 'converti' || statut === 'installé') ? '' : 'none';
+    if(statut === 'installé') btnPV.textContent = '✅ PV de réception';
+  }
   if(v.techNom) s('v-tech-nom',v.techNom);
   if(v.techTel) s('v-tech-tel',v.techTel);
   s('v-date', v.date||new Date().toISOString().slice(0,10));
@@ -1191,6 +1224,38 @@ function handlePhotos(input){
 
 // ── Enregistrer visite ───────────────────────────────────────────────
 function gv(id){ const e=document.getElementById(id); return e?e.value:''; }
+
+function suggestPackUI(kWc){
+  if(kWc <= 0) return '—';
+  if(kWc <= 3.25) return 'TEVIA Solo 3 kWc';
+  if(kWc <= 5.85) return 'TEVIA Duo 5.2 kWc';
+  if(kWc <= 9.75) return 'TEVIA Trio 9.1 kWc';
+  if(kWc <= 14.3) return 'TEVIA Quad 13 kWc';
+  return 'TEVIA sur mesure (' + kWc.toFixed(2) + ' kWc)';
+}
+
+function updateCorrBanner(){
+  var nbPan  = parseFloat(document.getElementById('v-corr-panels').value) || 0;
+  var banner = document.getElementById('pack-suggestion-banner');
+  var btnPV  = document.getElementById('btn-pv-reception');
+  if(nbPan <= 0){
+    // Utiliser valeurs du dimensionnement courant si disponibles
+    if(CURRENT && CURRENT.N_panels){
+      nbPan = CURRENT.N_panels;
+    } else {
+      if(banner) banner.style.display = 'none';
+      return;
+    }
+  }
+  var kWc      = nbPan * 0.65;
+  var psh      = (CURRENT && CURRENT.PSH) ? CURRENT.PSH : 5.5;
+  var prodAn   = Math.round(kWc * psh * 365 * 0.78);
+  var pack     = suggestPackUI(kWc);
+  if(document.getElementById('banner-kwc'))  document.getElementById('banner-kwc').textContent  = kWc.toFixed(2) + ' kWc';
+  if(document.getElementById('banner-prod')) document.getElementById('banner-prod').textContent = prodAn.toLocaleString('fr-FR') + ' kWh/an';
+  if(document.getElementById('banner-pack')) document.getElementById('banner-pack').textContent = pack;
+  if(banner) banner.style.display = '';
+}
 
 function saveVisite(){
   if(!CURRENT){ alert('Aucun devis selectionne.'); return; }
@@ -1898,6 +1963,12 @@ function validateInstallation(){
   var body = document.getElementById('pv-form-body');
   body.parentNode.insertBefore(banner, body);
   setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 4000);
+  // Fermer overlay PV après 2s et rafraîchir le bouton
+  setTimeout(function(){
+    document.getElementById('pv-overlay').style.display = 'none';
+    var btnPV = document.getElementById('btn-pv-reception');
+    if(btnPV){ btnPV.textContent = '\u2705 PV de r\u00e9ception'; }
+  }, 2000);
 }
 
 
