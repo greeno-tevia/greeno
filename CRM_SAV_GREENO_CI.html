@@ -1861,8 +1861,17 @@ async function initSupabase() {
   if (!_SB_READY) return;
   const keys = ['crm_clients','crm_tickets','crm_intervs','grn_prospects','grn_activites'];
   await Promise.all(keys.map(async k => {
-    const val = await sbLoad(k, []);
-    try { localStorage.setItem(k, JSON.stringify(val)); } catch(e){}
+    try {
+      const val = await sbLoad(k, []);
+      if (val && val.length) {
+        // Supabase a des données → mettre à jour localStorage
+        localStorage.setItem(k, JSON.stringify(val));
+      } else {
+        // Supabase vide → préserver localStorage et remonter vers Supabase
+        const local = JSON.parse(localStorage.getItem(k) || '[]');
+        if (local.length) sbSave(k, local).catch(() => {});
+      }
+    } catch(e) { console.warn('initSupabase', k, e); }
   }));
 }
 
@@ -5139,18 +5148,4 @@ function showNotif(msg) {
             </div>
             <div class="login-field" style="margin-bottom:0"><label>Mot de passe</label><input type="password" id="nu-pwd" placeholder="•••••"></div>
           </div>
-          <button class="btn btn-g" style="margin-top:12px" onclick="addUser()">➕ Ajouter</button>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <h3>🚪 Session</h3>
-        <button class="btn" style="background:#D32F2F;color:#fff;border:none" onclick="doLogout()">🔓 Se déconnecter</button>
-      </div>
-    </div>
-  </div>
-  </div>
-</div>
-
-</body>
-</html>
+          <bu

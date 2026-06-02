@@ -1470,18 +1470,26 @@ async function _sbUpsert(key, data){
 }
 
 async function initSupabase(){
+  var localDb    = JSON.parse(localStorage.getItem(DB_KEY)   || '[]');
+  var localTechs = JSON.parse(localStorage.getItem(TECH_KEY) || '[]');
   if(!_SB_READY){
-    _cache_db    = JSON.parse(localStorage.getItem(DB_KEY)   || '[]');
-    _cache_techs = JSON.parse(localStorage.getItem(TECH_KEY) || '[]');
+    _cache_db    = localDb;
+    _cache_techs = localTechs;
     return;
   }
   try{
-    _cache_db    = (await _sbFetch(DB_KEY))   || [];
-    _cache_techs = (await _sbFetch(TECH_KEY)) || [];
+    var sbDb    = (await _sbFetch(DB_KEY))   || [];
+    var sbTechs = (await _sbFetch(TECH_KEY)) || [];
+    // Utiliser Supabase seulement si non vide, sinon garder localStorage
+    _cache_db    = sbDb.length    ? sbDb    : localDb;
+    _cache_techs = sbTechs.length ? sbTechs : localTechs;
+    // Synchroniser localStorage
+    if(_cache_db.length)    localStorage.setItem(DB_KEY,    JSON.stringify(_cache_db));
+    if(_cache_techs.length) localStorage.setItem(TECH_KEY,  JSON.stringify(_cache_techs));
   } catch(e){
     console.warn('Supabase indisponible — fallback localStorage', e);
-    _cache_db    = JSON.parse(localStorage.getItem(DB_KEY)   || '[]');
-    _cache_techs = JSON.parse(localStorage.getItem(TECH_KEY) || '[]');
+    _cache_db    = localDb;
+    _cache_techs = localTechs;
   }
 }
 
@@ -4531,13 +4539,4 @@ function renderPacks(){
     type:'bar',
     data:{labels:pkNames,datasets:[{label:'Ventes',data:packs.map(p=>p.count),
       backgroundColor:pkColors,borderRadius:5}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{stepSize:1}},
-               x:{ticks:{font:{size:10}}}}}
-  });
-
-  charts['ch-pk-ca'] = new Chart(document.getElementById('ch-pk-ca'),{
-    type:'bar',
-    data:{labels:pkNames,datasets:[{label:'CA (MFCFA)',data:packs.map(p=>parseFloat(fmtM(p.ca))),
-      backgroundColor:pkColors,borderRadius:5}]},
-    options:{responsive:tr
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:fal
