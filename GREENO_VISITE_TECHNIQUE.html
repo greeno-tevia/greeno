@@ -218,7 +218,6 @@ textarea{resize:vertical;min-height:80px}
              onkeydown="if(event.key==='Enter')doLoginVisite()">
     </div>
     <button class="login-btn-main" onclick="doLoginVisite()">Se connecter</button>
-    <button id="login-continue-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:#e8f5ee;color:#0d2e1a;border:1.5px solid #2c6e49;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer"></button>
     <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect.</div>
     <div style="margin-top:20px;padding:13px 16px;background:#f0f4f0;border-radius:9px;font-size:.75rem;color:#667;text-align:center;line-height:1.6;border:1px solid #dde8dd">
       Accès réservé aux techniciens GREENO.<br>
@@ -1999,4 +1998,60 @@ function validateInstallation(){
   var body = document.getElementById('pv-form-body');
   body.parentNode.insertBefore(banner, body);
   setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 4000);
-  // Fermer overlay 
+  // Fermer overlay PV après 2s et rafraîchir le bouton
+  setTimeout(function(){
+    document.getElementById('pv-overlay').style.display = 'none';
+    var btnPV = document.getElementById('btn-pv-reception');
+    if(btnPV){ btnPV.textContent = '\u2705 PV de r\u00e9ception'; }
+  }, 2000);
+}
+
+
+// ── Init ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function(){
+  // Toujours afficher l'overlay de connexion
+  var ov=document.getElementById('login-overlay');
+  if(ov)ov.style.display='flex';
+  // Si session valide, proposer de continuer directement
+  try{
+    var raw=localStorage.getItem(SESSION_KEY);
+    if(raw){
+      var sess=JSON.parse(raw);
+      if(sess && sess.ts && sess.userId && (Date.now()-sess.ts)<SESSION_TTL){
+        var users=getUsers();
+        for(var i=0;i<users.length;i++){
+          if(users[i].id===sess.userId &&
+             (users[i].role==='technicien'||users[i].role==='admin')){
+            var btn=document.getElementById('login-continue-btn');
+            if(btn){
+              btn.textContent='Continuer en tant que '+users[i].nom;
+              btn.style.display='block';
+              btn.onclick=(function(u){return function(){
+                currentUser=u;
+                _activerSessionVisite();
+              };})(users[i]);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }catch(e){}
+  document.getElementById('v-date').value = new Date().toISOString().slice(0,10);
+});
+
+async function _initAppVisite(){
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div id="_sb_loader" style="position:fixed;inset:0;background:rgba(20,40,30,.85);display:flex;align-items:center;justify-content:center;z-index:9998;font-family:Arial,sans-serif;color:#F4C542;font-size:1.1rem;gap:12px">' +
+    '<svg width="32" height="32" viewBox="0 0 32 32" style="animation:spin 1s linear infinite"><circle cx="16" cy="16" r="12" fill="none" stroke="#F4C542" stroke-width="3" stroke-dasharray="56" stroke-dashoffset="14"/></svg>' +
+    'Chargement des données…</div>' +
+    '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>'
+  );
+  await initSupabase();
+  const loader = document.getElementById('_sb_loader');
+  if(loader) loader.remove();
+  renderDashboard();
+}
+</script>
+</body>
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                

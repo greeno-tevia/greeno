@@ -712,7 +712,7 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
         onkeydown="if(event.key==='Enter') doLogin()">
     </div>
     <button class="login-btn" onclick="doLogin()">Se connecter</button>
-    <button id="login-continue-btn" class="login-btn" style="display:none;background:linear-gradient(135deg,#1a5c30,#2C6E49);margin-top:8px;border:1.5px solid #4CAF50">Continuer la session</button>
+
     <div id="login-error" class="login-error">Identifiant ou mot de passe incorrect</div>
     <div style="margin-top:20px;padding:13px 16px;background:rgba(255,255,255,0.07);border-radius:9px;font-size:.75rem;color:#aac8b0;text-align:center;line-height:1.6;border:1px solid rgba(255,255,255,0.12)">
       Accès réservé au personnel GREENO CI.<br>
@@ -5148,4 +5148,10 @@ function showNotif(msg) {
             </div>
             <div class="login-field" style="margin-bottom:0"><label>Mot de passe</label><input type="password" id="nu-pwd" placeholder="•••••"></div>
           </div>
-          <bu
+          <button class="btn btn-g" style="margin-top:12px" onclick="addUser()">➕ Ajouter</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>🚪 Session</h3>
+        <butt
