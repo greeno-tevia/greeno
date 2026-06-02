@@ -482,6 +482,19 @@ textarea{resize:vertical;min-height:80px}
             <div id="banner-pack" style="font-weight:800;color:#F4C542;font-size:.8rem">—</div>
           </div>
         </div>
+        <!-- Pré-sélection pack pour rapport -->
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <label style="font-size:.75rem;color:#1a5c30;font-weight:700;white-space:nowrap">Pack à confirmer dans le rapport :</label>
+          <select id="v-pack-confirme" style="flex:1;min-width:200px;padding:6px 10px;border:1.5px solid #2C6E49;border-radius:7px;font-size:.78rem;background:#fff;font-weight:600">
+            <option value="">— Utiliser le pack suggéré —</option>
+            <option value="TEVIA Solo 3 kWc">TEVIA Solo 3 kWc</option>
+            <option value="TEVIA Duo 5.2 kWc">TEVIA Duo 5.2 kWc</option>
+            <option value="TEVIA Trio 9.1 kWc">TEVIA Trio 9.1 kWc</option>
+            <option value="TEVIA Quad 13 kWc">TEVIA Quad 13 kWc</option>
+            <option value="TEVIA sur mesure">TEVIA sur mesure</option>
+          </select>
+          <span style="font-size:.7rem;color:#888;font-style:italic">Aparaîtra dans le PDF marqué "À confirmer"</span>
+        </div>
       </div>
     </div>
 
@@ -1264,6 +1277,14 @@ function updateCorrBanner(){
   if(document.getElementById('banner-prod')) document.getElementById('banner-prod').textContent = prodAn.toLocaleString('fr-FR') + ' kWh/an';
   if(document.getElementById('banner-pack')) document.getElementById('banner-pack').textContent = pack;
   if(banner) banner.style.display = '';
+  // Auto-sélection dans le select pack
+  var sel = document.getElementById('v-pack-confirme');
+  if(sel && !sel.value) {
+    var opts = Array.from(sel.options);
+    for(var oi=1; oi<opts.length; oi++){
+      if(pack.indexOf(opts[oi].value.split(' ').slice(0,2).join(' ')) === 0){ sel.value = opts[oi].value; break; }
+    }
+  }
 }
 
 function saveVisite(){
@@ -1281,6 +1302,10 @@ function saveVisite(){
     corrPanels:gv('v-corr-panels'),   corrInv:gv('v-corr-inv'),
     corrBat:gv('v-corr-bat'),         corrNotes:gv('v-corr-notes'),
     notes:gv('v-notes'),              photos:photos,
+    packConfirme: (document.getElementById('v-pack-confirme')||{}).value || '',
+    packSuggere:  (document.getElementById('banner-pack')||{}).textContent || '',
+    kwcCorrige:   (document.getElementById('banner-kwc')||{}).textContent || '',
+    prodCorrige:  (document.getElementById('banner-prod')||{}).textContent || '',
   };
   const db=getDB(); const idx=db.findIndex(d=>String(d.id)===String(CURRENT.id));
   if(idx>=0){ db[idx].visite=visite; db[idx].statut='visite_effectuee'; }
@@ -1315,13 +1340,15 @@ function generateReport(){
 
   // ── Pack TEVIA adapté ──
   function suggestPack(kWc){
-    if(kWc <= 3.25) return 'Pack TEVIA Solo 3 kWc';
-    if(kWc <= 5.85) return 'Pack TEVIA Duo 5.2 kWc';
-    if(kWc <= 9.75) return 'Pack TEVIA Trio 9.1 kWc';
-    if(kWc <= 14.3) return 'Pack TEVIA Quad 13 kWc';
-    return 'Pack TEVIA sur mesure (' + kWc.toFixed(2) + ' kWc)';
+    if(kWc <= 3.25) return 'TEVIA Solo 3 kWc';
+    if(kWc <= 5.85) return 'TEVIA Duo 5.2 kWc';
+    if(kWc <= 9.75) return 'TEVIA Trio 9.1 kWc';
+    if(kWc <= 14.3) return 'TEVIA Quad 13 kWc';
+    return 'TEVIA sur mesure (' + kWc.toFixed(2) + ' kWc)';
   }
-  const packSuggere = d.packNom || suggestPack(corrPkW);
+  const packSuggere  = v.packSuggere  || d.packNom || suggestPack(corrPkW);
+  const packConfirme = v.packConfirme || '';  // pack pré-sélectionné par le technicien
+  const packDisplay  = packConfirme || packSuggere;
 
   // ── Format N × Modèle ──
   function fmtInv(d){
@@ -1461,7 +1488,7 @@ function generateReport(){
         <div>
           <div class="rpt-kv"><span>Production estimée / an</span><span style="color:#1a5c30;font-weight:700">${corrEAnnual.toLocaleString('fr-FR')} kWh</span></div>
           <div class="rpt-kv"><span>ROI estimé</span><span>${corrRoi} ans</span></div>
-          <div class="rpt-kv"><span>Pack TEVIA adapté</span><span style="color:#1a5c30">${packSuggere}</span></div>
+          <div class="rpt-kv"><span>Pack TEVIA retenu</span><span style="color:#1a5c30;font-weight:700">${packDisplay}${packConfirme ? ' <span style="background:#fff3cd;color:#856404;border-radius:4px;padding:1px 6px;font-size:.68rem;font-weight:700;margin-left:4px">✓ Confirmé</span>' : ' <span style="background:#ffe0b2;color:#e65100;border-radius:4px;padding:1px 6px;font-size:.68rem;font-weight:700;margin-left:4px">À confirmer par le commercial</span>'}</span></div>
           <div class="rpt-kv"><span>Montant devis TTC</span><span style="color:#2C6E49;font-size:1rem">${(d.cost_install||0).toLocaleString('fr-FR')} FCFA</span></div>
         </div>
       </div>
@@ -1972,51 +1999,4 @@ function validateInstallation(){
   var body = document.getElementById('pv-form-body');
   body.parentNode.insertBefore(banner, body);
   setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 4000);
-  // Fermer overlay PV après 2s et rafraîchir le bouton
-  setTimeout(function(){
-    document.getElementById('pv-overlay').style.display = 'none';
-    var btnPV = document.getElementById('btn-pv-reception');
-    if(btnPV){ btnPV.textContent = '\u2705 PV de r\u00e9ception'; }
-  }, 2000);
-}
-
-
-// ── Init ─────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', function(){
-  // Toujours afficher l'overlay de connexion
-  var ov=document.getElementById('login-overlay');
-  if(ov)ov.style.display='flex';
-  // Si session valide, proposer de continuer directement
-  try{
-    var raw=localStorage.getItem(SESSION_KEY);
-    if(raw){
-      var sess=JSON.parse(raw);
-      if(sess && sess.ts && sess.userId && (Date.now()-sess.ts)<SESSION_TTL){
-        var users=getUsers();
-        for(var i=0;i<users.length;i++){
-          if(users[i].id===sess.userId &&
-             (users[i].role==='technicien'||users[i].role==='admin')){
-            var btn=document.getElementById('login-continue-btn');
-            if(btn){
-              btn.textContent='Continuer en tant que '+users[i].nom;
-              btn.style.display='block';
-              btn.onclick=(function(u){return function(){
-                currentUser=u;
-                _activerSessionVisite();
-              };})(users[i]);
-            }
-            break;
-          }
-        }
-      }
-    }
-  }catch(e){}
-  document.getElementById('v-date').value = new Date().toISOString().slice(0,10);
-});
-
-async function _initAppVisite(){
-  document.body.insertAdjacentHTML('afterbegin',
-    '<div id="_sb_loader" style="position:fixed;inset:0;background:rgba(20,40,30,.85);display:flex;align-items:center;justify-content:center;z-index:9998;font-family:Arial,sans-serif;color:#F4C542;font-size:1.1rem;gap:12px">' +
-    '<svg width="32" height="32" viewBox="0 0 32 32" style="animation:spin 1s linear infinite"><circle cx="16" cy="16" r="12" fill="none" stroke="#F4C542" stroke-width="3" stroke-dasharray="56" stroke-dashoffset="14"/></svg>' +
-    'Chargement des données…</div>' +
-    '<style>@keyfram
+  // Fermer overlay 

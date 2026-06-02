@@ -829,17 +829,29 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
 
     <!-- Sous-onglets bien visibles -->
     <div class="stepper" id="tech-sub-stepper" style="border-radius:8px 8px 0 0;font-size:.95rem">
-      <div class="step active" id="ttech-t1" onclick="showTechTab('t1')" style="padding:14px 28px">
+      <div class="step active" id="ttech-t1"      onclick="showTechTab('t1')"      style="padding:14px 28px">
         <span class="step-num" style="font-size:.85rem">1</span>⚡ Interventions T1
       </div>
-      <div class="step" id="ttech-visite" onclick="showTechTab('visite')" style="padding:14px 28px">
-        <span class="step-num" style="font-size:.85rem">2</span>📅 Visites Client
+      <div class="step"        id="ttech-install" onclick="showTechTab('install')" style="padding:14px 28px">
+        <span class="step-num" style="font-size:.85rem">2</span>🔧 Installations en attente
+      </div>
+      <div class="step"        id="ttech-visite"  onclick="showTechTab('visite')"  style="padding:14px 28px">
+        <span class="step-num" style="font-size:.85rem">3</span>📅 Visites Client
       </div>
     </div>
 
     <!-- Pane Interventions T1 -->
     <div id="tech-pane-t1" style="border:1px solid #dee6ef;border-top:none;border-radius:0 0 8px 8px;padding:16px;min-height:200px">
       <div id="tech-t1-cards"></div>
+    </div>
+
+    <!-- Pane Installations en attente -->
+    <div id="tech-pane-install" style="display:none;border:1px solid #dee6ef;border-top:none;border-radius:0 0 8px 8px;padding:16px;min-height:200px">
+      <div style="font-size:.82rem;color:#7f2e00;margin-bottom:14px;padding:10px 14px;background:#fff8f0;border:1px solid #e65c00;border-radius:8px;display:flex;gap:8px;align-items:center">
+        <span style="font-size:1.1rem">🔧</span>
+        <span>Clients avec statut <strong>À installer</strong> — Prenez en charge une installation ou mettez à jour son statut.</span>
+      </div>
+      <div id="tech-install-cards"></div>
     </div>
 
     <!-- Pane Visites -->
@@ -1502,10 +1514,11 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
       </div>
     </div>
 
-    <!-- Stepper Prospects | Clients -->
+    <!-- Stepper Prospects | À installer | Clients -->
     <div class="stepper" id="prospects-stepper" style="margin:0 0 0">
-      <div class="step active" id="ptab-btn-list" onclick="showProspectTab('list')"><span class="step-num">1</span>🎯 Prospects</div>
-      <div class="step" id="ptab-btn-clients" onclick="showProspectTab('clients')"><span class="step-num">2</span>👥 Clients Installés</div>
+      <div class="step active" id="ptab-btn-list"      onclick="showProspectTab('list')"><span class="step-num">1</span>🎯 Prospects</div>
+      <div class="step"        id="ptab-btn-installer" onclick="showProspectTab('installer')"><span class="step-num">2</span>🔧 À installer <span id="badge-installer" style="background:#e65c00;color:#fff;border-radius:10px;padding:1px 7px;font-size:.7rem;margin-left:4px;display:none">0</span></div>
+      <div class="step"        id="ptab-btn-clients"   onclick="showProspectTab('clients')"><span class="step-num">3</span>👥 Clients Installés</div>
     </div>
 
     <!-- ONGLET PROSPECTS LIST -->
@@ -1523,6 +1536,7 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
             <option value="Contacté">📞 Contacté</option>
             <option value="RDV Planifié">📅 RDV Planifié</option>
             <option value="Visité">🏠 Visité</option>
+            <option value="À installer">🔧 À installer</option>
             <option value="En attente">⏳ En attente</option>
             <option value="Non intéressé">👎 Non intéressé</option>
             <option value="Converti">✅ Converti</option>
@@ -1588,6 +1602,36 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
     <!-- Detail panel -->
     <div id="detail-prospect" class="detail-panel"></div>
     </div><!-- /ptab-list -->
+
+    <!-- ONGLET CLIENTS À INSTALLER -->
+    <div id="ptab-installer" style="display:none;padding:18px 28px">
+      <div style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:1.5px solid #e65c00;border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:.8rem;color:#7f2e00;display:flex;gap:10px;align-items:center">
+        <span style="font-size:1.3rem">🔧</span>
+        <span>Ces clients ont un devis validé et une visite technique effectuée. L'installation est à planifier.</span>
+      </div>
+      <!-- Filtres -->
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end">
+        <div>
+          <label style="font-size:.75rem;color:#666;display:block;margin-bottom:3px">Technicien installateur</label>
+          <select id="fi-tech" onchange="renderInstaller()" style="min-width:160px">
+            <option value="">Tous</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:#666;display:block;margin-bottom:3px">Statut installation</label>
+          <select id="fi-statut" onchange="renderInstaller()" style="min-width:150px">
+            <option value="">Tous</option>
+            <option value="En attente">⏳ En attente</option>
+            <option value="Planifiée">📅 Planifiée</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:#666;display:block;margin-bottom:3px">Recherche</label>
+          <input type="text" id="fi-search" placeholder="Nom client..." oninput="renderInstaller()" style="min-width:180px;padding:6px 10px;border:1.5px solid #dee6ef;border-radius:8px;font-size:.82rem">
+        </div>
+      </div>
+      <div id="installer-cards"></div>
+    </div><!-- /ptab-installer -->
 
     <!-- ONGLET CLIENTS INSTALLÉS -->
     <div id="ptab-clients" style="display:none;padding:18px 28px">
@@ -3910,6 +3954,10 @@ function renderProspectAging(prospects) {
 
 function renderProspects() {
   var prospects = getProspects();
+  // Mise à jour badge "À installer"
+  var cntInstall = prospects.filter(function(p){ return p.statut==='À installer'; }).length;
+  var badge = document.getElementById('badge-installer');
+  if (badge) { badge.textContent = cntInstall; badge.style.display = cntInstall ? '' : 'none'; }
   var fStatut  = (document.getElementById('fp-statut') ||{}).value||'';
   var fPack    = (document.getElementById('fp-pack')   ||{}).value||'';
   var fPaie    = (document.getElementById('fp-paiement')||{}).value||'';
@@ -4220,7 +4268,9 @@ function showProspectDetail(id) {
       +'</div>'
       +'<div style="display:flex;gap:6px">'
         +'<button class="btn btn-o btn-sm" onclick="editProspect(\''+p.id+'\')">✏️ Modifier</button>'
-        +'<button class="btn btn-g btn-sm" onclick="convertProspect(\''+p.id+'\')">✅ Convertir en client</button>'
+        +(p.statut!=='À installer'&&p.statut!=='Converti'?'<button class="btn btn-sm" onclick="markAInstaller(\''+p.id+'\')" style="background:#e65c00;color:#fff;border:none">🔧 À installer</button>':'')
+        +(p.statut==='À installer'?'<button class="btn btn-g btn-sm" onclick="convertProspect(\''+p.id+'\')">✅ Client installé</button>':'')
+        +(p.statut!=='À installer'&&p.statut!=='Converti'?'<button class="btn btn-g btn-sm" onclick="convertProspect(\''+p.id+'\')">✅ Convertir en client</button>':'')
       +'</div>'
     +'</div>'
     +rdvBlock
@@ -4293,29 +4343,237 @@ function convertProspect(id) {
   showProspectDetail(id);
 }
 
+function markAInstaller(id) {
+  var prospects = getProspects();
+  var p = prospects.find(function(x){ return x.id===id; });
+  if (!p) return;
+  p.statut = 'À installer';
+  p.install_statut = p.install_statut || 'En attente';
+  saveProspects(prospects);
+  renderProspects();
+  renderInstaller();
+  // Refresh badge
+  var cnt = prospects.filter(function(x){ return x.statut==='À installer'; }).length;
+  var badge = document.getElementById('badge-installer');
+  if (badge) { badge.textContent = cnt; badge.style.display = cnt ? '' : 'none'; }
+}
+
+function setInstallStatut(id, statut) {
+  var prospects = getProspects();
+  var p = prospects.find(function(x){ return x.id===id; });
+  if (!p) return;
+  if (statut === 'Terminée') {
+    if (!confirm('Confirmer la fin de l\'installation ? Le client passera en "Client Installé".')) return;
+    p.statut = 'Converti';
+    p.install_statut = 'Terminée';
+    p.date_installation = today();
+  } else {
+    p.install_statut = statut;
+  }
+  saveProspects(prospects);
+  renderInstaller();
+  renderProspects();
+}
+
+function setInstallTech(id, techNom) {
+  var prospects = getProspects();
+  var p = prospects.find(function(x){ return x.id===id; });
+  if (!p) return;
+  p.install_tech = techNom;
+  saveProspects(prospects);
+}
+
+function setInstallDate(id, date) {
+  var prospects = getProspects();
+  var p = prospects.find(function(x){ return x.id===id; });
+  if (!p) return;
+  p.install_date = date;
+  if (date && p.install_statut === 'En attente') p.install_statut = 'Planifiée';
+  saveProspects(prospects);
+}
+
+// ── TEVIA pack suggestion depuis greeno_dimensionnements ──────────
+function getTeviaPack(clientNom) {
+  try {
+    var db = JSON.parse(localStorage.getItem('greeno_dimensionnements') || '[]');
+    var match = db.filter(function(d){ return (d.client||'').toLowerCase().trim() === (clientNom||'').toLowerCase().trim(); });
+    if (!match.length) return null;
+    // Prendre le plus récent
+    match.sort(function(a,b){ return new Date(b.dateISO||0) - new Date(a.dateISO||0); });
+    var d = match[0];
+    var v = d.visite || {};
+    var panels = v.corrPanels || d.N_panels || 0;
+    if (!panels) return null;
+    var kWc = parseFloat(panels) * 0.65;
+    var pack;
+    if (kWc <= 3.25)  pack = 'TEVIA Solo 3 kWc';
+    else if (kWc <= 5.85) pack = 'TEVIA Duo 5.2 kWc';
+    else if (kWc <= 9.75) pack = 'TEVIA Trio 9.1 kWc';
+    else if (kWc <= 14.3) pack = 'TEVIA Quad 13 kWc';
+    else pack = 'TEVIA sur mesure (' + kWc.toFixed(2) + ' kWc)';
+    return { pack: pack, kWc: kWc, panels: panels };
+  } catch(e) { return null; }
+}
+
+// ── Render Installer (onglet "À installer" dans Prospects) ────────
+function renderInstaller() {
+  var prospects = getProspects();
+  var aInstaller = prospects.filter(function(p){ return p.statut === 'À installer'; });
+
+  // Mise à jour badge
+  var badge = document.getElementById('badge-installer');
+  if (badge) { badge.textContent = aInstaller.length; badge.style.display = aInstaller.length ? '' : 'none'; }
+
+  // Filtre technicien
+  var fiTech = (document.getElementById('fi-tech')||{}).value || '';
+  var fiStatut = (document.getElementById('fi-statut')||{}).value || '';
+  var fiSearch = ((document.getElementById('fi-search')||{}).value || '').toLowerCase();
+
+  // Populate tech select
+  var sel = document.getElementById('fi-tech');
+  if (sel) {
+    var allTechs = new Set();
+    aInstaller.forEach(function(p){ if(p.install_tech) allTechs.add(p.install_tech); });
+    getUsers().forEach(function(u){ if(u.role==='technicien'||u.role==='admin') allTechs.add(u.nom); });
+    var opts = '<option value="">Tous</option>';
+    allTechs.forEach(function(t){ opts += '<option value="'+t+'"'+(t===fiTech?' selected':'')+'>'+t+'</option>'; });
+    sel.innerHTML = opts;
+  }
+
+  // Appliquer filtres
+  if (fiTech)   aInstaller = aInstaller.filter(function(p){ return (p.install_tech||'')=== fiTech; });
+  if (fiStatut) aInstaller = aInstaller.filter(function(p){ return (p.install_statut||'En attente')===fiStatut; });
+  if (fiSearch) aInstaller = aInstaller.filter(function(p){ return (p.nom||'').toLowerCase().includes(fiSearch)||(p.ville||'').toLowerCase().includes(fiSearch); });
+
+  var wrap = document.getElementById('installer-cards');
+  if (!wrap) return;
+
+  if (!aInstaller.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:.9rem">Aucun client "À installer" trouvé.</div>';
+    return;
+  }
+
+  aInstaller.sort(function(a,b){ return (a.install_statut||'')==='Planifiée' ? -1 : 1; });
+
+  wrap.innerHTML = aInstaller.map(function(p) {
+    var statut = p.install_statut || 'En attente';
+    var tevia = getTeviaPack(p.nom);
+    var statutCls = statut==='Planifiée' ? '#1a5c30' : '#e65c00';
+    var statutBg  = statut==='Planifiée' ? '#edf7f0' : '#fff8f0';
+    return '<div style="background:#fff;border:1.5px solid '+statutCls+';border-radius:12px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,.06)">'
+      // En-tête
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
+        +'<div>'
+          +'<div style="font-weight:800;font-size:.95rem;color:#0d2e1a">'+p.nom+'</div>'
+          +'<div style="font-size:.75rem;color:#666;margin-top:2px">📍 '+(p.ville||'—')+' &bull; 📞 '+(p.telephone||'—')+'</div>'
+        +'</div>'
+        +'<span style="background:'+statutBg+';color:'+statutCls+';border:1px solid '+statutCls+';border-radius:20px;padding:4px 12px;font-size:.75rem;font-weight:700">'+(statut==='Planifiée'?'📅':'⏳')+' '+statut+'</span>'
+      +'</div>'
+      // Infos pack
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+        +'<div style="background:#f5faf7;border-radius:8px;padding:8px 12px">'
+          +'<div style="font-size:.68rem;color:#666;text-transform:uppercase;font-weight:700">Pack commercial</div>'
+          +'<div style="font-size:.82rem;font-weight:700;color:#1a5c30;margin-top:2px">'+(p.pack||'—')+'</div>'
+        +'</div>'
+        +'<div style="background:#f5faf7;border-radius:8px;padding:8px 12px">'
+          +'<div style="font-size:.68rem;color:#666;text-transform:uppercase;font-weight:700">Pack TEVIA suggéré</div>'
+          +'<div style="font-size:.82rem;font-weight:700;color:#0d2e1a;margin-top:2px">'+(tevia ? tevia.pack+'<br><span style="font-size:.7rem;color:#888">'+tevia.panels+' panneaux · '+tevia.kWc.toFixed(2)+' kWc</span>' : '<span style="color:#aaa">—</span>')+'</div>'
+        +'</div>'
+        +'<div style="background:#f5faf7;border-radius:8px;padding:8px 12px">'
+          +'<div style="font-size:.68rem;color:#666;text-transform:uppercase;font-weight:700">Budget</div>'
+          +'<div style="font-size:.82rem;font-weight:700;color:#1a5c30;margin-top:2px">'+(p.budget||'—')+'</div>'
+        +'</div>'
+      +'</div>'
+      // Champs planification
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
+        +'<div>'
+          +'<label style="font-size:.72rem;color:#666;font-weight:700;display:block;margin-bottom:3px">📅 Date installation prévue</label>'
+          +'<input type="date" value="'+(p.install_date||'')+'" onchange="setInstallDate(\''+p.id+'\',this.value);renderInstaller()" style="width:100%;padding:6px 10px;border:1.5px solid #dee6ef;border-radius:8px;font-size:.82rem">'
+        +'</div>'
+        +'<div>'
+          +'<label style="font-size:.72rem;color:#666;font-weight:700;display:block;margin-bottom:3px">👷 Technicien installateur</label>'
+          +'<input type="text" value="'+(p.install_tech||'')+'" onblur="setInstallTech(\''+p.id+'\',this.value)" placeholder="Nom du technicien..." style="width:100%;padding:6px 10px;border:1.5px solid #dee6ef;border-radius:8px;font-size:.82rem">'
+        +'</div>'
+      +'</div>'
+      // Actions
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +(statut==='En attente' ? '<button onclick="setInstallStatut(\''+p.id+'\',\'Planifiée\')" style="background:#1a5c30;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer">📅 Marquer Planifiée</button>' : '')
+        +(statut==='Planifiée'  ? '<button onclick="setInstallStatut(\''+p.id+'\',\'Terminée\')" style="background:#0d2e1a;color:#F4C542;border:none;padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer">✅ Installation terminée → Client Installé</button>' : '')
+        +'<button onclick="editProspect(\''+p.id+'\')" style="background:#f0f4ff;color:#1a3a6a;border:1px solid #c0cfe8;padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer">✏️ Modifier fiche</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+// ── Render tech : Installations en attente ────────────────────────
+function renderTechInstall(filterTech) {
+  var prospects = getProspects().filter(function(p){ return p.statut === 'À installer'; });
+  if (filterTech) prospects = prospects.filter(function(p){ return (p.install_tech||'')===filterTech; });
+  var wrap = document.getElementById('tech-install-cards');
+  if (!wrap) return;
+  if (!prospects.length) {
+    wrap.innerHTML = '<div class="empty-tech">✅ Aucune installation en attente'+(filterTech?' pour '+filterTech:'')+'</div>';
+    return;
+  }
+  var currentUser = (function(){
+    try{ var s=JSON.parse(localStorage.getItem('grn_session')||'null'); return s&&s.nom?s:null; }catch(e){return null;}
+  })();
+
+  wrap.innerHTML = prospects.map(function(p) {
+    var statut = p.install_statut || 'En attente';
+    var tevia = getTeviaPack(p.nom);
+    var isAssigned = p.install_tech && currentUser && p.install_tech===currentUser.nom;
+    var notAssigned = !p.install_tech;
+    return '<div style="background:#fff;border:1.5px solid #e65c00;border-radius:10px;padding:14px 18px;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">'
+        +'<div>'
+          +'<div style="font-weight:800;font-size:.9rem;color:#0d2e1a">'+p.nom+'</div>'
+          +'<div style="font-size:.73rem;color:#666">📍 '+(p.ville||'—')+' &bull; 📞 '+(p.telephone||'—')+'</div>'
+        +'</div>'
+        +'<span style="background:#fff8f0;color:#e65c00;border:1px solid #e65c00;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700">'+statut+'</span>'
+      +'</div>'
+      +'<div style="font-size:.78rem;color:#333;margin-bottom:10px">'
+        +'<span style="margin-right:12px">📦 '+(tevia?tevia.pack:(p.pack||'—'))+'</span>'
+        +(p.install_date?'<span style="margin-right:12px">📅 '+p.install_date+'</span>':'')
+        +'<span>👷 '+(p.install_tech||'<em style="color:#aaa">Non assigné</em>')+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +(notAssigned && currentUser ? '<button onclick="setInstallTech(\''+p.id+'\',\''+((currentUser&&currentUser.nom)||'')+'\');renderTech()" style="background:#1a5c30;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer">👋 M\'attribuer</button>' : '')
+        +(statut==='En attente' ? '<button onclick="setInstallStatut(\''+p.id+'\',\'Planifiée\');renderTech()" style="background:#e65c00;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer">📅 Planifier</button>' : '')
+        +(statut==='Planifiée'  ? '<button onclick="setInstallStatut(\''+p.id+'\',\'Terminée\');renderTech()" style="background:#0d2e1a;color:#F4C542;border:none;padding:6px 12px;border-radius:7px;font-size:.75rem;font-weight:700;cursor:pointer">✅ Terminée</button>' : '')
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SECTION TECHNICIENS
 // ═══════════════════════════════════════════════════════════════
 function showProspectTab(tab) {
-  document.getElementById('ptab-list').style.display    = tab==='list'    ? 'block' : 'none';
-  document.getElementById('ptab-clients').style.display = tab==='clients' ? 'block' : 'none';
-  document.querySelectorAll('#prospects-stepper .step').forEach(function(s,i){
-    s.classList.toggle('active', (tab==='list' && i===0) || (tab==='clients' && i===1));
-  });
-  if(tab==='clients') renderClients();
+  document.getElementById('ptab-list').style.display      = tab==='list'      ? 'block' : 'none';
+  document.getElementById('ptab-installer').style.display = tab==='installer' ? 'block' : 'none';
+  document.getElementById('ptab-clients').style.display   = tab==='clients'   ? 'block' : 'none';
+  document.getElementById('ptab-btn-list').classList.toggle('active',      tab==='list');
+  document.getElementById('ptab-btn-installer').classList.toggle('active', tab==='installer');
+  document.getElementById('ptab-btn-clients').classList.toggle('active',   tab==='clients');
+  if(tab==='clients')   renderClients();
+  if(tab==='installer') renderInstaller();
 }
 
 function showTechTab(tab) {
-  document.getElementById('tech-pane-t1').style.display    = tab==='t1'     ? '' : 'none';
-  document.getElementById('tech-pane-visite').style.display= tab==='visite' ? '' : 'none';
-  document.getElementById('ttech-t1').classList.toggle('active',    tab==='t1');
-  document.getElementById('ttech-visite').classList.toggle('active', tab==='visite');
+  document.getElementById('tech-pane-t1').style.display      = tab==='t1'      ? '' : 'none';
+  document.getElementById('tech-pane-install').style.display = tab==='install' ? '' : 'none';
+  document.getElementById('tech-pane-visite').style.display  = tab==='visite'  ? '' : 'none';
+  document.getElementById('ttech-t1').classList.toggle('active',      tab==='t1');
+  document.getElementById('ttech-install').classList.toggle('active', tab==='install');
+  document.getElementById('ttech-visite').classList.toggle('active',  tab==='visite');
   renderTech();
 }
 
 function renderTech() {
   var filterTech = document.getElementById('tech-filter-name').value;
   renderTechT1(filterTech);
+  renderTechInstall(filterTech);
   renderTechVisites(filterTech);
   populateTechFilterSelect();
 }
@@ -4633,68 +4891,6 @@ function saveActiviteTech() {
   }
 
   closeModal('modal-activite-tech');
-  renderTech();
-  renderProspects();
-  showNotif('Activité enregistrée avec succès');
-}
-
-// Ouvrir modal suivi commercial
-function openSuiviCommercial(prospectId) {
-  var pros = getProspects();
-  var p = pros.find(function(x){return x.id===prospectId;});
-  if(!p) return;
-  _suiviProspectId = prospectId;
-  document.getElementById('suivi-prospect-id').value = prospectId;
-  document.getElementById('suivi-prospect-name').textContent = p.nom;
-  document.getElementById('suivi-prospect-detail').textContent =
-    (p.telephone||'')+(p.ville?' · '+p.ville:'')+(p.pack?' · '+p.pack:'');
-  document.getElementById('suivi-date').value = today2();
-  document.getElementById('suivi-heure').value = nowTime2();
-  document.getElementById('suivi-decision').value = '';
-  document.getElementById('suivi-notes').value = '';
-  document.querySelectorAll('.suivi-btn').forEach(function(b){
-    b.style.boxShadow = 'none';
-    b.style.transform = 'none';
-  });
-  openModal('modal-suivi-commercial');
-}
-
-// Enregistrer suivi commercial
-function saveSuiviCommercial() {
-  var pId = document.getElementById('suivi-prospect-id').value;
-  var dec = document.getElementById('suivi-decision').value;
-  if(!dec) { alert('Veuillez choisir une décision commerciale.'); return; }
-
-  var activites = getActivites();
-  var act = {
-    id: nextId(activites, 'ACT'),
-    type: 'suivi_commercial',
-    prospect_id: pId,
-    auteur: document.getElementById('suivi-commercial').value.trim() || 'Commercial',
-    date: document.getElementById('suivi-date').value,
-    heure: document.getElementById('suivi-heure').value,
-    resultat: dec,
-    notes: document.getElementById('suivi-notes').value.trim(),
-    created_at: new Date().toISOString()
-  };
-  activites.push(act);
-  saveActivites(activites);
-
-  // Mettre à jour le prospect
-  var pros = getProspects();
-  var idx = pros.findIndex(function(p){return p.id===pId;});
-  if(idx >= 0) {
-    if(dec === 'converti') {
-      pros[idx].statut = 'Converti';
-    } else if(dec === 'non_interesse') {
-      pros[idx].statut = 'Non intéressé';
-    } else if(dec === 'en_attente') {
-      pros[idx].statut = 'En attente';
-    }
-    saveProspects(pros);
-  }
-
-  closeModal('modal-suivi-commercial');
   renderTech();
   renderProspects();
   showNotif('Suivi commercial enregistré');
