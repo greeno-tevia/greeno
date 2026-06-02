@@ -712,9 +712,13 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
         onkeydown="if(event.key==='Enter') doLogin()">
     </div>
     <button class="login-btn" onclick="doLogin()">🔐 Se connecter</button>
+    <button id="login-continue-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:#e8f5ee;color:#0d2e1a;border:1.5px solid #2c6e49;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#d0ecdc'" onmouseout="this.style.background='#e8f5ee'"></button>
     <div id="login-error" class="login-error">Identifiant ou mot de passe incorrect</div>
-    <div style="text-align:center;margin-top:18px;font-size:.7rem;color:#bbb">
-      Contact admin pour réinitialiser votre accès
+    <div style="margin-top:16px;padding:12px;background:#f5f8f5;border-radius:9px;font-size:.72rem;color:#555;line-height:1.8">
+      <strong style="color:#0d2e1a">Identifiants :</strong><br>
+      admin / <code>greeno2024</code><br>
+      commercial1 / <code>com123</code> &nbsp;·&nbsp; tech1 / <code>tech123</code><br>
+      tech2 / <code>tech456</code>
     </div>
   </div>
 </div>
@@ -3210,7 +3214,13 @@ var DEFAULT_USERS = [
 function getUsers() {
   try {
     var stored = localStorage.getItem('grn_users');
-    return stored ? JSON.parse(stored) : DEFAULT_USERS;
+    if (!stored) return DEFAULT_USERS;
+    var extra = JSON.parse(stored);
+    // Toujours fusionner: les comptes par défaut ont priorité sur les id identiques
+    var merged = DEFAULT_USERS.slice();
+    var defIds = DEFAULT_USERS.map(function(u){ return u.id; });
+    extra.forEach(function(u){ if (defIds.indexOf(u.id) < 0) merged.push(u); });
+    return merged;
   } catch(e) { return DEFAULT_USERS; }
 }
 
@@ -3434,14 +3444,37 @@ document.addEventListener('DOMContentLoaded', async function() {
   await initSupabase();
   spinner.remove();
 
-  if(!tryAutoLogin()){
-    // Show login — hide badge
-    document.getElementById('user-badge').style.display='none';
-    // Allow pressing Enter on login fields
-    document.getElementById('login-user').addEventListener('keydown',function(e){
-      if(e.key==='Enter') document.getElementById('login-pass').focus();
-    });
-  }
+  // Toujours afficher le login overlay
+  var ov = document.getElementById('login-overlay');
+  if (ov) ov.style.display = 'flex';
+  document.getElementById('user-badge').style.display='none';
+  document.getElementById('login-user').addEventListener('keydown',function(e){
+    if(e.key==='Enter') document.getElementById('login-pass').focus();
+  });
+  // Si session valide, proposer de continuer directement
+  try {
+    var raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      var sess = JSON.parse(raw);
+      if (sess && sess.ts && sess.userId && (Date.now()-sess.ts) < SESSION_TTL) {
+        var users = getUsers();
+        for (var i = 0; i < users.length; i++) {
+          if (users[i].id === sess.userId) {
+            var btn = document.getElementById('login-continue-btn');
+            if (btn) {
+              btn.textContent = 'Continuer en tant que ' + users[i].nom;
+              btn.style.display = 'block';
+              btn.onclick = (function(u){ return function(){
+                currentUser = u;
+                _activerSession();
+              }; })(users[i]);
+            }
+            break;
+          }
+        }
+      }
+    }
+  } catch(e) {}
 });
 
 

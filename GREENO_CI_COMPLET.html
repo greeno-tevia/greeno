@@ -533,6 +533,11 @@ footer{background:var(--green-dark);color:rgba(255,255,255,.5);text-align:center
     <button class="login-btn" onclick="doLogin()">Se connecter</button>
     <button id="login-continue-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:#e8f5ee;color:#0d2e1a;border:1.5px solid #2c6e49;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#d0ecdc'" onmouseout="this.style.background='#e8f5ee'"></button>
     <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect.</div>
+    <div style="margin-top:18px;padding:12px;background:#f5f8f5;border-radius:9px;font-size:.72rem;color:#555;line-height:1.7">
+      <strong style="color:#0d2e1a">Accès Commercial / Admin :</strong><br>
+      admin / <code>greeno2024</code> &nbsp;·&nbsp; commercial1 / <code>com123</code><br>
+      commercial2 / <code>com456</code>
+    </div>
   </div>
 </div>
 
@@ -1761,7 +1766,16 @@ var DEFAULT_USERS = [
 ];
 
 function getUsers(){
-  try{ var s=localStorage.getItem('grn_users'); return s?JSON.parse(s):DEFAULT_USERS; }catch(e){return DEFAULT_USERS;}
+  try{
+    var s=localStorage.getItem('grn_users');
+    if(!s) return DEFAULT_USERS;
+    var stored=JSON.parse(s);
+    // Toujours fusionner: les comptes par défaut écrasent les entrées stockées du même id
+    var merged=DEFAULT_USERS.slice();
+    var defIds=DEFAULT_USERS.map(function(u){return u.id;});
+    stored.forEach(function(u){ if(defIds.indexOf(u.id)<0) merged.push(u); });
+    return merged;
+  }catch(e){return DEFAULT_USERS;}
 }
 
 function doLogin(){
@@ -4527,18 +4541,4 @@ function renderPacks(){
     type:'bar',
     data:{labels:pkNames,datasets:[{label:'CA (MFCFA)',data:packs.map(p=>parseFloat(fmtM(p.ca))),
       backgroundColor:pkColors,borderRadius:5}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true},x:{ticks:{font:{size:10}}}}}
-  });
-
-  // Table packs
-  if(!packs.length){
-    document.getElementById('pk-table-wrap').innerHTML=
-      '<div class="empty"><div class="empty-icon"></div><p>Aucun devis avec pack TEVIA sélectionné.</p></div>';
-  } else {
-    const rows = packs.map((p,i)=>`
-      <tr>
-        <td style="font-weight:bold;color:${TYPE_COLORS[i%TYPE_COLORS.length]}">${p.nom}</td>
-        <td style="text-align:center"><b>${p.count}</b></td>
-        <td style="text-align:right">${fmtM(p.ca)} MFCFA</td>
-        <td style="text-align:right">${fmtM(p.ca/p.cou
+    options:{responsive:tr
