@@ -177,6 +177,11 @@ textarea{resize:vertical;min-height:80px}
   #com-rpt-overlay,.rpt-actions{display:none!important}
   #rpt-overlay{position:static!important;background:none!important;padding:0!important;display:block!important}
   #rpt-overlay .rpt-modal{border-radius:0;box-shadow:none;max-width:100%}
+  /* PV de réception print */
+  #pv-overlay{position:static!important;background:none!important;padding:0!important;display:block!important}
+  #pv-overlay .rpt-modal{border-radius:0;box-shadow:none;max-width:100%}
+  #pv-form-body{display:none!important}
+  #pv-overlay > .rpt-modal > div:first-child{display:none!important}
   body{background:#fff}
   /* Contrôle sauts de page — max 3 pages */
   #rpt-content{font-size:.78rem}
@@ -500,6 +505,126 @@ textarea{resize:vertical;min-height:80px}
       <button class="btn btn-outline" onclick="document.getElementById('rpt-overlay').style.display='none'">Fermer</button>
     </div>
   </div>
+
+<!-- ═══ PV DE RÉCEPTION overlay ══════════════════════════════════════ -->
+<div class="rpt-overlay" id="pv-overlay">
+  <div class="rpt-modal" style="max-width:820px;margin:0 auto">
+    <!-- Header -->
+    <div style="padding:16px 22px;border-bottom:1px solid #e5eaef;display:flex;justify-content:space-between;align-items:center;background:#0a2218;border-radius:8px 8px 0 0">
+      <div>
+        <div style="font-size:1rem;font-weight:800;color:#F4C542;letter-spacing:.04em">📋 PV DE RÉCEPTION &amp; MISE EN SERVICE</div>
+        <div style="font-size:.72rem;color:#a0c4a0;margin-top:2px" id="pv-ref-label">—</div>
+      </div>
+      <button class="btn btn-outline" style="color:#fff;border-color:#4a7c5a" onclick="document.getElementById('pv-overlay').style.display='none'">✕ Fermer</button>
+    </div>
+
+    <div style="padding:18px 22px 8px;max-height:72vh;overflow-y:auto" id="pv-form-body">
+
+      <!-- Identification -->
+      <div style="background:#f0f7f2;border-radius:8px;padding:14px 16px;margin-bottom:14px;border-left:4px solid #2C6E49">
+        <div style="font-weight:700;color:#0a2218;margin-bottom:10px;font-size:.88rem">🔑 IDENTIFICATION DU KIT</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Kit ID</label>
+            <input id="pv-kit-id" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem;font-family:monospace;font-weight:700;color:#1a5c30">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Date d&apos;installation</label>
+            <input type="date" id="pv-install-date" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Technicien installateur</label>
+            <input id="pv-tech-nom" placeholder="Nom du technicien" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+        </div>
+      </div>
+
+      <!-- Panneaux — Lots -->
+      <div style="background:#fff;border:1px solid #dee6ef;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-weight:700;color:#0a2218;font-size:.88rem">☀️ PANNEAUX SOLAIRES — N° DE SÉRIE PAR LOT</div>
+          <button onclick="pvAddLot()" style="background:#2C6E49;color:#fff;border:none;border-radius:5px;padding:5px 12px;font-size:.75rem;cursor:pointer">+ Lot</button>
+        </div>
+        <div style="font-size:.7rem;color:#888;margin-bottom:8px" id="pv-panels-info">— panneaux à sérialiser</div>
+        <div id="pv-lots-container"></div>
+        <div style="font-size:.7rem;color:#e65100;margin-top:6px;display:none" id="pv-lots-warn">⚠ Le total des lots doit égaler le nombre de panneaux installés.</div>
+      </div>
+
+      <!-- Onduleurs -->
+      <div style="background:#fff;border:1px solid #dee6ef;border-radius:8px;padding:14px 16px;margin-bottom:14px" id="pv-inv-section">
+        <div style="font-weight:700;color:#0a2218;font-size:.88rem;margin-bottom:10px">⚡ ONDULEUR(S) — N° DE SÉRIE</div>
+        <div id="pv-inv-rows"></div>
+      </div>
+
+      <!-- Batteries -->
+      <div style="background:#fff;border:1px solid #dee6ef;border-radius:8px;padding:14px 16px;margin-bottom:14px" id="pv-bat-section">
+        <div style="font-weight:700;color:#0a2218;font-size:.88rem;margin-bottom:10px">🔋 BATTERIE(S) — N° DE SÉRIE</div>
+        <div id="pv-bat-rows"></div>
+      </div>
+
+      <!-- Tests de mise en service -->
+      <div style="background:#fff;border:1px solid #dee6ef;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;color:#0a2218;font-size:.88rem;margin-bottom:10px">📊 MESURES À LA MISE EN SERVICE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Tension DC (V)</label>
+            <input id="pv-vdc" type="number" placeholder="ex: 380" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Tension AC (V)</label>
+            <input id="pv-vac" type="number" placeholder="ex: 230" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Courant DC (A)</label>
+            <input id="pv-idc" type="number" placeholder="ex: 12.5" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Puissance mesurée (kW)</label>
+            <input id="pv-pmeas" type="number" placeholder="ex: 4.2" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Fréquence (Hz)</label>
+            <input id="pv-freq" type="number" placeholder="50" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+          <div>
+            <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Résistance ISO (MΩ)</label>
+            <input id="pv-iso" type="number" placeholder="ex: 100" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem">
+          </div>
+        </div>
+      </div>
+
+      <!-- Checklist conformité -->
+      <div style="background:#fff;border:1px solid #dee6ef;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-weight:700;color:#0a2218;font-size:.88rem;margin-bottom:10px">✅ CONTRÔLES DE CONFORMITÉ</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="pv-checklist">
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck1"> Câblage DC conforme et sécurisé</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck2"> Câblage AC conforme NF C 15-100</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck3"> Mise à la terre (terre PV) vérifiée</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck4"> Protections AC/DC installées (disjoncteurs)</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck5"> Fixation panneaux conforme (structure / rails)</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck6"> Étanchéité toiture préservée</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck7"> Onduleur démarré et paramétré</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck8"> Batterie initialisée et opérationnelle</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck9"> Test de coupure réseau réussi</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:.8rem;cursor:pointer"><input type="checkbox" id="ck10"> Notice utilisateur remise au client</label>
+        </div>
+        <div style="margin-top:10px">
+          <label style="font-size:.72rem;color:#666;display:block;margin-bottom:3px">Observations / réserves</label>
+          <textarea id="pv-reserves" rows="2" placeholder="Indiquer toute réserve ou observation…" style="width:100%;padding:7px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.82rem;resize:vertical"></textarea>
+        </div>
+      </div>
+
+    </div><!-- /pv-form-body -->
+
+    <div style="padding:12px 22px;border-top:1px solid #e5eaef;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button onclick="generatePvDoc()" style="background:#1a5c30;color:#fff;border:none;border-radius:6px;padding:9px 18px;font-size:.82rem;font-weight:700;cursor:pointer">📄 Générer PV imprimable</button>
+      <button onclick="validateInstallation()" style="background:#2C6E49;color:#F4C542;border:none;border-radius:6px;padding:9px 18px;font-size:.82rem;font-weight:700;cursor:pointer">✅ Valider &amp; Marquer Installé</button>
+      <button onclick="window.print()" style="background:#fff;border:1px solid #aaa;border-radius:6px;padding:9px 18px;font-size:.82rem;cursor:pointer">🖨️ Imprimer</button>
+      <button onclick="document.getElementById('pv-overlay').style.display='none'" style="background:#fff;border:1px solid #aaa;border-radius:6px;padding:9px 18px;font-size:.82rem;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -1094,23 +1219,39 @@ function generateReport(){
   const corrBat   = v.corrBat   ? parseFloat(v.corrBat)   : (d.bat_kWh||0);
   const corrPkW   = corrPanel * 0.65;  // 650 Wc par panneau
 
+  // ── Recalcul production / ROI sur valeurs corrigées ──
+  const origKwc     = d.P_inst_kW || (d.N_panels||0)*0.65 || corrPkW;
+  const psh         = d.psh || 4.5;
+  const corrEAnnual = Math.round(corrPkW * psh * 365 * 0.78);
+  const corrSavings = (origKwc > 0 && d.savings_fcfa) ? Math.round((d.savings_fcfa||0) * corrPkW / origKwc) : (d.savings_fcfa||0);
+  const corrRoi     = corrSavings > 0 ? ((d.cost_install||0) / corrSavings).toFixed(1) : (d.roi||0).toFixed(1);
+
+  // ── Pack TEVIA adapté ──
+  function suggestPack(kWc){
+    if(kWc <= 3.25) return 'Pack TEVIA Solo 3 kWc';
+    if(kWc <= 5.85) return 'Pack TEVIA Duo 5.2 kWc';
+    if(kWc <= 9.75) return 'Pack TEVIA Trio 9.1 kWc';
+    if(kWc <= 14.3) return 'Pack TEVIA Quad 13 kWc';
+    return 'Pack TEVIA sur mesure (' + kWc.toFixed(2) + ' kWc)';
+  }
+  const packSuggere = d.packNom || suggestPack(corrPkW);
+
   // ── Format N × Modèle ──
-  function fmtInv(d, corrInv){
-    const n    = d.n_inv  || 1;
-    const nom  = d.inv_nom|| 'Onduleur';
-    const kva  = corrInv  ? corrInv + ' kVA' : (d.inv_kW ? d.inv_kW + ' kW' : '');
-    const label= kva ? nom + ' ' + kva : nom;
-    return n + ' × ' + label;
+  function fmtInv(d){
+    const n   = d.n_inv  || 1;
+    const nom = d.inv_nom|| 'Onduleur';
+    return n + ' × ' + nom;
   }
   function fmtBat(d, corrBat){
-    const n     = d.n_bat    || 1;
-    const nom   = d.bat_label|| d.bat_nom || 'Batterie';
-    const kwh   = corrBat > 0 ? corrBat.toFixed(1) + ' kWh' : '';
-    const label = kwh ? nom + ' ' + kwh : nom;
+    const n   = d.n_bat || 1;
+    // Nom du modèle en priorité; si absent, description LFP générique
+    const nom = d.bat_label || d.bat_nom
+              || (corrBat > 0 ? 'LFP ' + (corrBat/n).toFixed(1) + ' kWh' : 'Batterie');
+    const label = nom + (corrBat > 0 ? ' (' + corrBat.toFixed(1) + ' kWh total)' : '');
     return n + ' × ' + label;
   }
 
-  const invStr = fmtInv(d, v.corrInv ? parseFloat(v.corrInv) : null);
+  const invStr = fmtInv(d);
   const batStr = (corrBat > 0) ? fmtBat(d, corrBat) : 'Sans stockage';
 
   // ── Photos ──
@@ -1186,7 +1327,7 @@ function generateReport(){
       <div class="rpt-synthese-lbl">${corrBat>0?'Batterie'+(((d.n_bat||1))>1?'s':''):'Stockage'}</div>
     </div>
     <div>
-      <div class="rpt-synthese-val">${(d.E_annual_kWh||0).toLocaleString('fr-FR')} kWh</div>
+      <div class="rpt-synthese-val">${corrEAnnual.toLocaleString('fr-FR')} kWh</div>
       <div class="rpt-synthese-lbl">Production / an</div>
     </div>
   </div>
@@ -1231,9 +1372,9 @@ function generateReport(){
           <div class="rpt-kv"><span>Stockage batterie</span><span>${batStr}</span></div>
         </div>
         <div>
-          <div class="rpt-kv"><span>Production estimée / an</span><span>${(d.E_annual_kWh||0).toLocaleString('fr-FR')} kWh</span></div>
-          <div class="rpt-kv"><span>ROI estimé</span><span>${(d.roi||0).toFixed(1)} ans</span></div>
-          <div class="rpt-kv"><span>Pack TEVIA</span><span>${d.packNom||'Non sélectionné'}</span></div>
+          <div class="rpt-kv"><span>Production estimée / an</span><span style="color:#1a5c30;font-weight:700">${corrEAnnual.toLocaleString('fr-FR')} kWh</span></div>
+          <div class="rpt-kv"><span>ROI estimé</span><span>${corrRoi} ans</span></div>
+          <div class="rpt-kv"><span>Pack TEVIA adapté</span><span style="color:#1a5c30">${packSuggere}</span></div>
           <div class="rpt-kv"><span>Montant devis TTC</span><span style="color:#2C6E49;font-size:1rem">${(d.cost_install||0).toLocaleString('fr-FR')} FCFA</span></div>
         </div>
       </div>
@@ -1328,6 +1469,424 @@ function generateReport(){
 </div>`;
   document.getElementById('rpt-overlay').style.display='block';
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PV DE RÉCEPTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function _pvKitId(d){
+  const year  = new Date().getFullYear();
+  const city  = (d.ville||'XXX').replace(/[^A-Za-z]/g,'').toUpperCase().slice(0,3).padEnd(3,'X');
+  // Use ref suffix or a 4-digit hash
+  const refNum = (d.ref||'').replace(/\D/g,'').slice(-4).padStart(4,'0') ||
+                 String(Math.floor(1000 + Math.random()*9000));
+  return 'KIT-' + year + '-' + city + '-' + refNum;
+}
+
+function openPvReception(prospectId){
+  // Find prospect / dimensionnement
+  var prId = prospectId;
+  var dim  = null;
+  var dims = JSON.parse(localStorage.getItem('greeno_dimensionnements')||'[]');
+
+  if(prId){
+    // Try to find matching dimensionnement
+    dim = dims.find(function(x){ return x.id===prId || x.prospectId===prId; })
+       || dims.find(function(x){ return x.client && x.id===prId; })
+       || null;
+  }
+  if(!dim && CURRENT){ dim = CURRENT; }
+  if(!dim){
+    alert("Aucun dimensionnement trouvé pour ce dossier.");
+    return;
+  }
+
+  // Set CURRENT for context if needed
+  if(!CURRENT) CURRENT = dim;
+
+  const d  = dim;
+  const v  = d.visite || {};
+  const pv = v.pv     || {};
+
+  // Header label
+  document.getElementById('pv-ref-label').textContent =
+    (d.client||'—') + ' — ' + (d.ref||'—') + ' — ' + (d.ville||'—');
+
+  // Pre-fill identification
+  document.getElementById('pv-kit-id').value      = pv.kitId      || _pvKitId(d);
+  document.getElementById('pv-install-date').value = pv.installDate|| new Date().toISOString().slice(0,10);
+  document.getElementById('pv-tech-nom').value     = pv.techNom    || v.techNom || '';
+
+  // Panels info
+  const nPanels = (v.corrPanels ? parseInt(v.corrPanels) : d.N_panels) || 0;
+  document.getElementById('pv-panels-info').textContent = nPanels + ' panneau(x) à sérialiser';
+
+  // Render lots
+  var lots = (pv.panelLots && pv.panelLots.length) ? pv.panelLots : [{ lot:'LOT-01', sn:'', qty: nPanels }];
+  document.getElementById('pv-lots-container').innerHTML = '';
+  lots.forEach(function(lot, i){ _pvRenderLot(lot, i); });
+  _pvCheckLots();
+
+  // Onduleurs
+  var nInv = (v.corrInv ? 1 : d.n_inv) || 1;  // corrInv changes kVA not count
+  nInv = d.n_inv || 1;
+  var invSns = pv.invSns || [];
+  var invHtml = '';
+  for(var i=0;i<nInv;i++){
+    invHtml += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">' +
+      '<span style="font-size:.75rem;min-width:80px;color:#666">' + (d.inv_nom||'Onduleur') + ' #' + (i+1) + '</span>' +
+      '<input class="pv-inv-sn" placeholder="N° de série onduleur ' + (i+1) + '" value="' + (invSns[i]||'') + '" style="flex:1;padding:6px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.8rem;font-family:monospace">' +
+      '</div>';
+  }
+  document.getElementById('pv-inv-rows').innerHTML = invHtml || '<span style="color:#aaa;font-size:.8rem;font-style:italic">Pas d'onduleur renseigné</span>';
+
+  // Batteries
+  var nBat = d.n_bat || 0;
+  var batSns = pv.batSns || [];
+  var batHtml = '';
+  if(nBat > 0){
+    for(var i=0;i<nBat;i++){
+      batHtml += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">' +
+        '<span style="font-size:.75rem;min-width:80px;color:#666">' + (d.bat_label||d.bat_nom||'Batterie') + ' #' + (i+1) + '</span>' +
+        '<input class="pv-bat-sn" placeholder="N° de série batterie ' + (i+1) + '" value="' + (batSns[i]||'') + '" style="flex:1;padding:6px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.8rem;font-family:monospace">' +
+        '</div>';
+    }
+  } else {
+    batHtml = '<span style="color:#aaa;font-size:.8rem;font-style:italic">Aucune batterie dans cette installation</span>';
+  }
+  document.getElementById('pv-bat-rows').innerHTML = batHtml;
+  document.getElementById('pv-bat-section').style.display = nBat > 0 ? '' : 'none';
+
+  // Tests commissioning
+  document.getElementById('pv-vdc').value   = pv.vdc   || '';
+  document.getElementById('pv-vac').value   = pv.vac   || '';
+  document.getElementById('pv-idc').value   = pv.idc   || '';
+  document.getElementById('pv-pmeas').value = pv.pmeas || '';
+  document.getElementById('pv-freq').value  = pv.freq  || '';
+  document.getElementById('pv-iso').value   = pv.iso   || '';
+
+  // Checklist
+  var checks = pv.checks || {};
+  for(var c=1;c<=10;c++){
+    var el = document.getElementById('ck'+c);
+    if(el) el.checked = checks['ck'+c] || false;
+  }
+  document.getElementById('pv-reserves').value = pv.reserves || '';
+
+  // Show pv-form-body, hide any previous preview
+  document.getElementById('pv-form-body').style.display = '';
+  var prev = document.getElementById('pv-preview-section');
+  if(prev) prev.remove();
+
+  document.getElementById('pv-overlay').style.display = 'block';
+}
+
+function _pvRenderLot(lot, idx){
+  var row = document.createElement('div');
+  row.id = 'pv-lot-' + idx;
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px';
+  row.innerHTML =
+    '<input placeholder="N° lot (ex: LOT-01)" value="' + (lot.lot||'') + '" ' +
+      'onchange="pvLotChanged()" style="width:110px;padding:6px 9px;border:1px solid #c5d8cc;border-radius:5px;font-size:.8rem;font-family:monospace">' +
+    '<input placeholder="Plage S/N (ex: HIGON-2024-001 à 008)" value="' + (lot.sn||'') + '" ' +
+      'style="flex:1;padding:6px 9px;border:1px solid #c5d8cc;border-radius:5px;font-size:.8rem;font-family:monospace">' +
+    '<input type="number" placeholder="Qté" value="' + (lot.qty||'') + '" min="1" ' +
+      'onchange="pvLotChanged()" style="width:65px;padding:6px 9px;border:1px solid #c5d8cc;border-radius:5px;font-size:.8rem;text-align:center">' +
+    '<button onclick="pvRemoveLot(' + idx + ')" style="background:none;border:1px solid #e0534a;color:#e0534a;border-radius:4px;width:26px;height:26px;cursor:pointer;font-size:.85rem;line-height:1">✕</button>';
+  document.getElementById('pv-lots-container').appendChild(row);
+}
+
+function pvAddLot(){
+  var rows = document.querySelectorAll('#pv-lots-container > div');
+  var idx  = rows.length;
+  _pvRenderLot({ lot: 'LOT-0' + (idx+1), sn: '', qty: '' }, idx);
+}
+
+function pvRemoveLot(idx){
+  var el = document.getElementById('pv-lot-' + idx);
+  if(el) el.remove();
+  _pvCheckLots();
+}
+
+function pvLotChanged(){ _pvCheckLots(); }
+
+function _pvCheckLots(){
+  var nPanels = parseInt((document.getElementById('pv-panels-info').textContent||'0')) || 0;
+  var total   = 0;
+  document.querySelectorAll('#pv-lots-container > div').forEach(function(row){
+    var q = parseInt(row.querySelectorAll('input')[2].value) || 0;
+    total += q;
+  });
+  var warn = document.getElementById('pv-lots-warn');
+  if(warn) warn.style.display = (nPanels > 0 && total !== nPanels) ? '' : 'none';
+}
+
+function _pvCollect(){
+  // Collect all form values into a pv object
+  var lots = [];
+  document.querySelectorAll('#pv-lots-container > div').forEach(function(row){
+    var ins = row.querySelectorAll('input');
+    lots.push({ lot: ins[0].value, sn: ins[1].value, qty: parseInt(ins[2].value)||0 });
+  });
+  var invSns = [], batSns = [];
+  document.querySelectorAll('.pv-inv-sn').forEach(function(el){ invSns.push(el.value); });
+  document.querySelectorAll('.pv-bat-sn').forEach(function(el){ batSns.push(el.value); });
+  var checks = {};
+  for(var c=1;c<=10;c++){
+    var el = document.getElementById('ck'+c);
+    checks['ck'+c] = el ? el.checked : false;
+  }
+  return {
+    kitId:       document.getElementById('pv-kit-id').value,
+    installDate: document.getElementById('pv-install-date').value,
+    techNom:     document.getElementById('pv-tech-nom').value,
+    panelLots:   lots,
+    invSns:      invSns,
+    batSns:      batSns,
+    vdc:    document.getElementById('pv-vdc').value,
+    vac:    document.getElementById('pv-vac').value,
+    idc:    document.getElementById('pv-idc').value,
+    pmeas:  document.getElementById('pv-pmeas').value,
+    freq:   document.getElementById('pv-freq').value,
+    iso:    document.getElementById('pv-iso').value,
+    checks: checks,
+    reserves: document.getElementById('pv-reserves').value
+  };
+}
+
+function generatePvDoc(){
+  if(!CURRENT){ alert('Aucun dimensionnement actif.'); return; }
+  var pv = _pvCollect();
+  var d  = CURRENT, v = d.visite||{};
+  var today = new Date(pv.installDate || Date.now()).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+
+  var corrPanel = v.corrPanels ? parseInt(v.corrPanels) : (d.N_panels||0);
+  var corrBat   = v.corrBat   ? parseFloat(v.corrBat)  : (d.bat_kWh||0);
+  var corrPkW   = corrPanel * 0.65;
+  var origKwc   = d.P_inst_kW || (d.N_panels||0)*0.65 || corrPkW;
+  var psh       = d.psh || 4.5;
+  var corrEAn   = Math.round(corrPkW * psh * 365 * 0.78);
+
+  var _hdrImgs    = document.querySelectorAll('#main-header .logo-wrap img');
+  var LOGO_GREENO = _hdrImgs[0] ? _hdrImgs[0].src : '';
+  var LOGO_TEVIA  = _hdrImgs[1] ? _hdrImgs[1].src : '';
+
+  // Checklist labels
+  var ckLabels = ['Câblage DC conforme et sécurisé','Câblage AC conforme NF C 15-100',
+    'Mise à la terre (terre PV) vérifiée','Protections AC/DC installées (disjoncteurs)',
+    'Fixation panneaux conforme (structure / rails)','Étanchéité toiture préservée',
+    'Onduleur démarré et paramétré','Batterie initialisée et opérationnelle',
+    'Test de coupure réseau réussi','Notice utilisateur remise au client'];
+
+  var ckHtml = ckLabels.map(function(lbl, i){
+    var ok = pv.checks['ck'+(i+1)];
+    return '<tr><td style="padding:4px 8px;font-size:.78rem">' + lbl + '</td>' +
+           '<td style="padding:4px 8px;text-align:center;font-size:.9rem">' + (ok?'✅':'☐') + '</td></tr>';
+  }).join('');
+
+  var lotsHtml = pv.panelLots.map(function(l){
+    return '<tr><td style="padding:4px 8px;font-size:.78rem;font-family:monospace">' + (l.lot||'—') + '</td>' +
+           '<td style="padding:4px 8px;font-size:.78rem;font-family:monospace">' + (l.sn||'—') + '</td>' +
+           '<td style="padding:4px 8px;font-size:.78rem;text-align:center">' + (l.qty||'—') + '</td></tr>';
+  }).join('');
+
+  var invHtml = pv.invSns.map(function(sn, i){
+    return '<tr><td style="padding:4px 8px;font-size:.78rem">' + (d.inv_nom||'Onduleur') + ' #' + (i+1) + '</td>' +
+           '<td style="padding:4px 8px;font-size:.78rem;font-family:monospace">' + (sn||'—') + '</td></tr>';
+  }).join('') || '<tr><td colspan="2" style="padding:4px 8px;font-size:.78rem;color:#aaa">Non renseigné</td></tr>';
+
+  var batHtml = pv.batSns.length ? pv.batSns.map(function(sn, i){
+    return '<tr><td style="padding:4px 8px;font-size:.78rem">' + (d.bat_label||d.bat_nom||'Batterie') + ' #' + (i+1) + '</td>' +
+           '<td style="padding:4px 8px;font-size:.78rem;font-family:monospace">' + (sn||'—') + '</td></tr>';
+  }).join('') : '<tr><td colspan="2" style="padding:4px 8px;font-size:.78rem;color:#aaa">Aucune batterie</td></tr>';
+
+  var pvHtml = '<div style="font-family:'Segoe UI',Arial,sans-serif;color:#222;max-width:760px;margin:0 auto">' +
+
+  // EN-TÊTE
+  '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px 0 12px;border-bottom:2px solid #2C6E49;margin-bottom:14px">' +
+    '<div style="display:flex;align-items:center;gap:12px">' +
+      (LOGO_GREENO ? '<img src="'+LOGO_GREENO+'" style="height:36px;object-fit:contain">' : '') +
+      (LOGO_GREENO && LOGO_TEVIA ? '<div style="width:1px;height:30px;background:#ddd"></div>' : '') +
+      (LOGO_TEVIA  ? '<img src="'+LOGO_TEVIA+'"  style="height:36px;object-fit:contain">' : '') +
+    '</div>' +
+    '<div style="text-align:right">' +
+      '<div style="font-size:1.05rem;font-weight:900;color:#0a2218;letter-spacing:.05em">PV DE RÉCEPTION &amp; MISE EN SERVICE</div>' +
+      '<div style="font-size:.72rem;color:#666;margin-top:2px">Installation solaire photovoltaïque &bull; EDF SAVANT GROUP CI</div>' +
+    '</div>' +
+  '</div>' +
+
+  // IDENTIFIANT KIT
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:#f0f7f2;border-radius:6px;padding:10px 14px;margin-bottom:12px">' +
+    '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Kit ID</div><div style="font-weight:800;color:#1a5c30;font-family:monospace;font-size:.95rem">' + (pv.kitId||'—') + '</div></div>' +
+    '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Date d'installation</div><div style="font-weight:700;font-size:.85rem">' + today + '</div></div>' +
+    '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Technicien</div><div style="font-weight:700;font-size:.85rem">' + (pv.techNom||'—') + '</div></div>' +
+  '</div>' +
+
+  // CLIENT
+  '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:.78rem">' +
+    '<thead><tr><th colspan="4" style="background:#0a2218;color:#F4C542;padding:6px 10px;text-align:left;border-radius:4px 4px 0 0">CLIENT &amp; SITE</th></tr></thead>' +
+    '<tbody style="background:#fff">' +
+      '<tr><td style="padding:4px 10px;border:1px solid #e5eaef"><b>Client</b></td><td style="padding:4px 10px;border:1px solid #e5eaef">' + (d.client||'—') + '</td>' +
+      '<td style="padding:4px 10px;border:1px solid #e5eaef"><b>Réf. dossier</b></td><td style="padding:4px 10px;border:1px solid #e5eaef">' + (d.ref||'—') + '</td></tr>' +
+      '<tr><td style="padding:4px 10px;border:1px solid #e5eaef"><b>Adresse / Ville</b></td><td style="padding:4px 10px;border:1px solid #e5eaef">' + (d.adresse||d.ville||'—') + '</td>' +
+      '<td style="padding:4px 10px;border:1px solid #e5eaef"><b>Téléphone</b></td><td style="padding:4px 10px;border:1px solid #e5eaef">' + (d.tel||'—') + '</td></tr>' +
+    '</tbody>' +
+  '</table>' +
+
+  // MATÉRIEL INSTALLÉ
+  '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:.78rem">' +
+    '<thead><tr><th colspan="3" style="background:#0a2218;color:#F4C542;padding:6px 10px;text-align:left">MATÉRIEL INSTALLÉ</th></tr></thead>' +
+    '<tbody style="background:#fff">' +
+      '<tr><td style="padding:4px 10px;border:1px solid #e5eaef"><b>Puissance crête</b></td><td colspan="2" style="padding:4px 10px;border:1px solid #e5eaef">' + corrPkW.toFixed(2) + ' kWc (' + corrPanel + ' × 650 Wc)</td></tr>' +
+      '<tr><td style="padding:4px 10px;border:1px solid #e5eaef"><b>Onduleur(s)</b></td><td colspan="2" style="padding:4px 10px;border:1px solid #e5eaef">' + (d.n_inv||1) + ' × ' + (d.inv_nom||'Onduleur') + '</td></tr>' +
+      (corrBat>0?'<tr><td style="padding:4px 10px;border:1px solid #e5eaef"><b>Batterie(s)</b></td><td colspan="2" style="padding:4px 10px;border:1px solid #e5eaef">' + (d.n_bat||1) + ' × ' + (d.bat_label||d.bat_nom||'Batterie LFP') + ' — ' + corrBat.toFixed(1) + ' kWh total</td></tr>':'') +
+      '<tr><td style="padding:4px 10px;border:1px solid #e5eaef"><b>Production estimée</b></td><td colspan="2" style="padding:4px 10px;border:1px solid #e5eaef">' + corrEAn.toLocaleString('fr-FR') + ' kWh/an</td></tr>' +
+    '</tbody>' +
+  '</table>' +
+
+  // N° DE SÉRIE PANNEAUX
+  '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:.78rem">' +
+    '<thead><tr>' +
+      '<th style="background:#1a5c30;color:#fff;padding:6px 10px;text-align:left;width:110px">N° Lot</th>' +
+      '<th style="background:#1a5c30;color:#fff;padding:6px 10px;text-align:left">Plage de numéros de série (panneaux)</th>' +
+      '<th style="background:#1a5c30;color:#fff;padding:6px 10px;text-align:center;width:60px">Qté</th>' +
+    '</tr></thead>' +
+    '<tbody style="background:#fff">' + lotsHtml + '</tbody>' +
+  '</table>' +
+
+  // N° DE SÉRIE ONDULEURS + BATTERIES
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+    '<table style="border-collapse:collapse;font-size:.78rem">' +
+      '<thead><tr><th colspan="2" style="background:#1a5c30;color:#fff;padding:6px 10px;text-align:left">N° SÉRIE ONDULEUR(S)</th></tr></thead>' +
+      '<tbody style="background:#fff">' + invHtml + '</tbody>' +
+    '</table>' +
+    '<table style="border-collapse:collapse;font-size:.78rem">' +
+      '<thead><tr><th colspan="2" style="background:#1a5c30;color:#fff;padding:6px 10px;text-align:left">N° SÉRIE BATTERIE(S)</th></tr></thead>' +
+      '<tbody style="background:#fff">' + batHtml + '</tbody>' +
+    '</table>' +
+  '</div>' +
+
+  // MESURES COMMISSIONING
+  '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:.78rem">' +
+    '<thead><tr><th colspan="6" style="background:#0a2218;color:#F4C542;padding:6px 10px;text-align:left">MESURES À LA MISE EN SERVICE</th></tr>' +
+      '<tr style="background:#f5f5f5"><th style="padding:5px 8px;border:1px solid #ddd">V DC (V)</th><th style="padding:5px 8px;border:1px solid #ddd">V AC (V)</th>' +
+      '<th style="padding:5px 8px;border:1px solid #ddd">I DC (A)</th><th style="padding:5px 8px;border:1px solid #ddd">P mesurée (kW)</th>' +
+      '<th style="padding:5px 8px;border:1px solid #ddd">Fréquence (Hz)</th><th style="padding:5px 8px;border:1px solid #ddd">ISO (MΩ)</th></tr></thead>' +
+    '<tbody style="background:#fff"><tr>' +
+      '<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-family:monospace">' + (pv.vdc||'—') + '</td>' +
+      '<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-family:monospace">' + (pv.vac||'—') + '</td>' +
+      '<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-family:monospace">' + (pv.idc||'—') + '</td>' +
+      '<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-family:monospace">' + (pv.pmeas||'—') + '</td>' +
+      '<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-family:monospace">' + (pv.freq||'50') + '</td>' +
+      '<td style="padding:6px 8px;border:1px solid #ddd;text-align:center;font-family:monospace">' + (pv.iso||'—') + '</td>' +
+    '</tr></tbody>' +
+  '</table>' +
+
+  // CHECKLIST
+  '<table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:.78rem">' +
+    '<thead><tr><th colspan="2" style="background:#0a2218;color:#F4C542;padding:6px 10px;text-align:left">CONTRÔLES DE CONFORMITÉ</th></tr></thead>' +
+    '<tbody style="background:#fff">' + ckHtml + '</tbody>' +
+  '</table>' +
+
+  // Réserves
+  (pv.reserves ? '<div style="background:#fff8e1;border:1px solid #f9e07a;border-radius:5px;padding:8px 12px;margin-bottom:12px;font-size:.78rem"><b>Réserves / Observations :</b> ' + pv.reserves + '</div>' : '') +
+
+  // GARANTIES
+  '<div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.76rem">' +
+    '<div style="font-weight:700;color:#1b5e20;margin-bottom:4px">📜 GARANTIES CONTRACTUELLES</div>' +
+    '<div>• Panneaux HIGON : <b>25 ans</b> (performance linéaire) &bull; 12 ans produit</div>' +
+    '<div>• Onduleur : <b>5 ans</b> constructeur &bull; Extension sur demande</div>' +
+    '<div>• Batterie LFP : <b>10 ans</b> ou 4 000 cycles (capacité ≥ 80%)</div>' +
+    '<div>• Main d'œuvre &amp; installation : <b>3 ans</b> EDF SAVANT GROUP CI</div>' +
+    '<div>• SAV &amp; hotline GREENO CI : 08h–18h, lundi–samedi</div>' +
+  '</div>' +
+
+  // SIGNATURES
+  '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:10px">' +
+    '<div style="border:1px solid #dee6ef;border-radius:6px;padding:12px;text-align:center">' +
+      '<div style="font-size:.7rem;color:#888;margin-bottom:20px">Technicien installateur</div>' +
+      '<div style="border-top:1px solid #aaa;margin-bottom:4px"></div>' +
+      '<div style="font-size:.75rem;font-weight:700">' + (pv.techNom||'—') + '</div>' +
+    '</div>' +
+    '<div style="border:1px solid #dee6ef;border-radius:6px;padding:12px;text-align:center">' +
+      '<div style="font-size:.7rem;color:#888;margin-bottom:20px">Commercial (SC)</div>' +
+      '<div style="border-top:1px solid #aaa;margin-bottom:4px"></div>' +
+      '<div style="font-size:.75rem;font-weight:700">' + (d.techNom||'—') + '</div>' +
+    '</div>' +
+    '<div style="border:1px solid #dee6ef;border-radius:6px;padding:12px;text-align:center">' +
+      '<div style="font-size:.7rem;color:#888;margin-bottom:20px">Lu et approuvé — Client</div>' +
+      '<div style="border-top:1px solid #aaa;margin-bottom:4px"></div>' +
+      '<div style="font-size:.75rem;font-weight:700">' + (d.client||'—') + '</div>' +
+    '</div>' +
+  '</div>' +
+
+  // PIED DE PAGE
+  '<div style="text-align:center;margin-top:12px;font-size:.62rem;color:#bbb;border-top:1px solid #eee;padding-top:6px">' +
+    'EDF SAVANT GROUP CI SAS &bull; RCCM : CI-ABJ-03-2022-B16-00156 &bull; Kit : ' + (pv.kitId||'—') + ' &bull; Généré le ' + new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) +
+  '</div>' +
+
+  '</div>';  // /container
+
+  // Replace form body with preview
+  var body = document.getElementById('pv-form-body');
+  body.style.display = 'none';
+  var prev = document.getElementById('pv-preview-section');
+  if(prev) prev.remove();
+  var previewDiv = document.createElement('div');
+  previewDiv.id = 'pv-preview-section';
+  previewDiv.style.cssText = 'padding:16px 22px;max-height:72vh;overflow-y:auto';
+  previewDiv.innerHTML = pvHtml;
+  body.parentNode.insertBefore(previewDiv, body.nextSibling);
+
+  // Save PV data to visite
+  _pvSave(pv);
+}
+
+function _pvSave(pv){
+  if(!CURRENT) return;
+  var dims = JSON.parse(localStorage.getItem('greeno_dimensionnements')||'[]');
+  var idx  = dims.findIndex(function(x){ return x.id === CURRENT.id; });
+  if(idx < 0) return;
+  dims[idx].visite = dims[idx].visite || {};
+  dims[idx].visite.pv = pv;
+  localStorage.setItem('greeno_dimensionnements', JSON.stringify(dims));
+  CURRENT.visite = dims[idx].visite;
+}
+
+function validateInstallation(){
+  if(!CURRENT){ alert('Aucun dimensionnement actif.'); return; }
+  var pv = _pvCollect();
+
+  // Save PV
+  _pvSave(pv);
+
+  // Update statut → Installé in grn_prospects (CRM shared localStorage)
+  var prospectId = CURRENT.id || CURRENT.prospectId;
+  var updated = false;
+  try {
+    var prospects = JSON.parse(localStorage.getItem('grn_prospects')||'[]');
+    for(var i=0;i<prospects.length;i++){
+      if(prospects[i].id === prospectId || prospects[i].ref === CURRENT.ref){
+        prospects[i].statut       = 'Installé';
+        prospects[i].install_date = pv.installDate;
+        prospects[i].kitId        = pv.kitId;
+        updated = true;
+        break;
+      }
+    }
+    if(updated) localStorage.setItem('grn_prospects', JSON.stringify(prospects));
+  } catch(e){}
+
+  // Show success banner
+  var banner = document.createElement('div');
+  banner.style.cssText = 'background:#1a5c30;color:#F4C542;text-align:center;padding:10px;font-weight:700;font-size:.88rem;border-radius:5px;margin:10px 22px';
+  banner.textContent = '✅ Installation validée — Statut mis à jour : Installé';
+  var body = document.getElementById('pv-form-body');
+  body.parentNode.insertBefore(banner, body);
+  setTimeout(function(){ if(banner.parentNode) banner.parentNode.removeChild(banner); }, 4000);
+}
+
 
 // ── Init ─────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function(){
