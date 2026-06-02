@@ -172,10 +172,21 @@ textarea{resize:vertical;min-height:80px}
   .hdr-tech{width:100%}
 }
 @media print{
-  #login-overlay,header,.nav-tabs,#view-visites,.rpt-overlay,.rpt-actions{display:none!important}
-  .rpt-overlay{position:static;background:none;padding:0;display:block!important}
-  .rpt-modal{border-radius:0;box-shadow:none;max-width:100%}
-  @page{size:A4;margin:12mm}
+  @page{size:A4;margin:10mm 12mm}
+  #login-overlay,header,.nav-tabs,#view-visites,
+  #com-rpt-overlay,.rpt-actions{display:none!important}
+  #rpt-overlay{position:static!important;background:none!important;padding:0!important;display:block!important}
+  #rpt-overlay .rpt-modal{border-radius:0;box-shadow:none;max-width:100%}
+  body{background:#fff}
+  /* Contrôle sauts de page — max 3 pages */
+  #rpt-content{font-size:.78rem}
+  .rpt-header{page-break-after:avoid}
+  .rpt-sec{page-break-inside:avoid}
+  .rpt-hl{page-break-inside:avoid}
+  .rpt-synthese{page-break-inside:avoid}
+  .rpt-sign{page-break-before:auto;page-break-inside:avoid}
+  .rpt-table{page-break-inside:auto}
+  .rpt-table tr{page-break-inside:avoid}
 }
 </style>
 </head>
@@ -1066,134 +1077,249 @@ function saveVisite(){
   m.textContent='Visite enregistree !'; setTimeout(()=>m.textContent='',3000);
 }
 
-// ── Rapport complet ──────────────────────────────────────────────────
+// ── Rapport technique — format unifié GREENO CI ─────────────────────
 function generateReport(){
   saveVisite();
   if(!CURRENT) return;
   const d=CURRENT, v=d.visite||{};
   const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-  const corrPanel=v.corrPanels?parseInt(v.corrPanels):d.N_panels;
-  const corrBat  =v.corrBat  ?parseFloat(v.corrBat)  :d.bat_kWh;
-  const corrInv  =v.corrInv  ?parseFloat(v.corrInv)  :null;
 
-  const photoHtml=v.photos&&v.photos.length
-    ?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
-        ${v.photos.map((src,i)=>`<div><img src="${src}" style="width:100%;border-radius:6px;border:1px solid #ddd">
-        <div style="font-size:.65rem;text-align:center;color:#aaa;margin-top:2px">Photo ${i+1}</div></div>`).join('')}
+  // ── Valeurs corrigées visite ──
+  const corrPanel = v.corrPanels ? parseInt(v.corrPanels)  : (d.N_panels||0);
+  const corrBat   = v.corrBat   ? parseFloat(v.corrBat)   : (d.bat_kWh||0);
+  const corrPkW   = corrPanel * 0.65;  // 650 Wc par panneau
+
+  // ── Format N × Modèle ──
+  function fmtInv(d, corrInv){
+    const n    = d.n_inv  || 1;
+    const nom  = d.inv_nom|| 'Onduleur';
+    const kva  = corrInv  ? corrInv + ' kVA' : (d.inv_kW ? d.inv_kW + ' kW' : '');
+    const label= kva ? nom + ' ' + kva : nom;
+    return n + ' × ' + label;
+  }
+  function fmtBat(d, corrBat){
+    const n     = d.n_bat    || 1;
+    const nom   = d.bat_label|| d.bat_nom || 'Batterie';
+    const kwh   = corrBat > 0 ? corrBat.toFixed(1) + ' kWh' : '';
+    const label = kwh ? nom + ' ' + kwh : nom;
+    return n + ' × ' + label;
+  }
+
+  const invStr = fmtInv(d, v.corrInv ? parseFloat(v.corrInv) : null);
+  const batStr = (corrBat > 0) ? fmtBat(d, corrBat) : 'Sans stockage';
+
+  // ── Photos ──
+  const photoHtml = v.photos && v.photos.length
+    ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">
+        ${v.photos.map((src,i)=>`<div><img src="${src}" style="width:100%;border-radius:4px;border:1px solid #ddd">
+        <div style="font-size:.6rem;text-align:center;color:#aaa;margin-top:2px">Photo ${i+1}</div></div>`).join('')}
       </div>`
-    :'<p style="color:#aaa;font-style:italic;font-size:.78rem">Aucune photo jointe.</p>';
+    : '<p style="color:#aaa;font-style:italic;font-size:.76rem">Aucune photo jointe.</p>';
 
-  const corrections=(v.corrPanels||v.corrInv||v.corrBat)
-    ?`<tr style="background:#fff8e1"><td colspan="4" style="padding:6px 10px;font-weight:700;color:#e65100">Corrections apres visite terrain</td></tr>
-       ${v.corrPanels?`<tr><td style="padding:5px 10px">Panneaux (corrige)</td><td colspan="3" style="padding:5px 10px;font-weight:700">${v.corrPanels} panneaux</td></tr>`:''}
-       ${v.corrInv?`<tr><td style="padding:5px 10px">Onduleur (corrige)</td><td colspan="3" style="padding:5px 10px;font-weight:700">${v.corrInv} kVA</td></tr>`:''}
-       ${v.corrBat?`<tr><td style="padding:5px 10px">Batterie (corrigee)</td><td colspan="3" style="padding:5px 10px;font-weight:700">${v.corrBat} kWh</td></tr>`:''}
-       ${v.corrNotes?`<tr><td colspan="4" style="padding:5px 10px;font-style:italic;color:#666">${v.corrNotes}</td></tr>`:''}`:'';
+  // ── Corrections ──
+  const hasCorrx = v.corrPanels || v.corrInv || v.corrBat;
+  const corrHtml = hasCorrx ? `
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">6. CORRECTIONS APRÈS VISITE TERRAIN</div>
+      <div class="rpt-sec-body">
+        <div class="rpt-warn">⚠ Des corrections ont été apportées après la visite terrain. Les valeurs ci-dessous remplacent le dimensionnement initial.</div>
+        <div class="g2" style="margin-top:6px">
+          ${v.corrPanels?`<div class="rpt-kv"><span>Panneaux (corrigé)</span><span>${v.corrPanels} panneaux — ${corrPkW.toFixed(2)} kWc</span></div>`:''}
+          ${v.corrInv?`<div class="rpt-kv"><span>Onduleur (corrigé)</span><span>${v.corrInv} kVA</span></div>`:''}
+          ${v.corrBat?`<div class="rpt-kv"><span>Batterie (corrigée)</span><span>${v.corrBat} kWh</span></div>`:''}
+          ${v.corrNotes?`<div class="rpt-kv" style="grid-column:1/-1"><span>Motif</span><span style="font-style:italic">${v.corrNotes}</span></div>`:''}
+        </div>
+      </div>
+    </div>` : '';
+
+  const obsHtml = v.notes ? `
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">7. OBSERVATIONS ET RECOMMANDATIONS</div>
+      <div class="rpt-sec-body">
+        <div style="font-size:.8rem;line-height:1.6;background:#f8fafc;border-radius:4px;padding:8px">${v.notes}</div>
+      </div>
+    </div>` : '';
 
   document.getElementById('rpt-content').innerHTML=`
-<div style="font-family:'Segoe UI',Arial,sans-serif;font-size:.85rem;color:#222;max-width:760px;margin:0 auto">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #2C6E49;padding-bottom:12px;margin-bottom:18px">
+<div style="font-family:'Segoe UI',Arial,sans-serif;color:#222;max-width:760px;margin:0 auto">
+
+  <!-- EN-TÊTE ─────────────────────────────────────────── -->
+  <div class="rpt-header">
     <div>
-      <div style="font-size:1.3rem;font-weight:800;color:#2C6E49">RAPPORT TECHNIQUE COMPLET</div>
-      <div style="font-size:.82rem;color:#555;margin-top:3px">Dimensionnement + Visite de Site</div>
-      <div style="font-size:.75rem;color:#888">${d.sc||''}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <img src="${LOGO_GREENO}" style="height:38px;object-fit:contain">
+        <div style="width:1px;height:32px;background:#ddd"></div>
+        <img src="${LOGO_TEVIA}"  style="height:38px;object-fit:contain">
+      </div>
+      <div class="rpt-title">RAPPORT DE VISITE TECHNIQUE SOLAIRE</div>
+      <div class="rpt-sub">Dimensionnement validé sur site &bull; ${d.sc||'GREENO CI'}</div>
     </div>
-    <div style="text-align:right">
-      <div style="font-weight:700">${d.ref||'—'}</div>
-      <div style="font-size:.75rem;color:#888">Devis : ${d.date||'—'}</div>
-      <div style="font-size:.75rem;color:#888">Visite : ${v.date||today}</div>
-    </div>
-  </div>
-  <div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:.88rem;color:#2C6E49;border-bottom:1px solid #e0e7ef;padding-bottom:4px;margin-bottom:8px">INFORMATIONS CLIENT</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-      <div><span style="color:#888;font-size:.75rem">Client</span><br><strong>${d.client||'—'}</strong></div>
-      <div><span style="color:#888;font-size:.75rem">Reference</span><br><strong>${d.ref||'—'}</strong></div>
-      <div><span style="color:#888;font-size:.75rem">Telephone</span><br>${d.tel||'—'}</div>
-      <div><span style="color:#888;font-size:.75rem">Ville</span><br>${d.ville||'—'}</div>
+    <div class="rpt-ref">
+      <div style="font-size:.95rem;font-weight:800;color:#0a2218">${d.ref||'—'}</div>
+      <div>Devis : ${d.date||'—'}</div>
+      <div>Visite : ${v.date||today}</div>
+      <div style="margin-top:4px">Technicien : <b>${v.techNom||'—'}</b>${v.techTel?' &bull; '+v.techTel:''}</div>
     </div>
   </div>
-  <div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:.88rem;color:#2C6E49;border-bottom:1px solid #e0e7ef;padding-bottom:4px;margin-bottom:8px">DIMENSIONNEMENT FINAL</div>
-    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-      <tr style="background:#f0f9f4">
-        <td style="padding:5px 10px">Puissance installee</td><td style="padding:5px 10px;font-weight:700">${d.P_inst_kW||0} kWc</td>
-        <td style="padding:5px 10px">Production annuelle</td><td style="padding:5px 10px;font-weight:700">${(d.E_annual_kWh||0).toLocaleString('fr-FR')} kWh/an</td>
-      </tr>
-      <tr>
-        <td style="padding:5px 10px">Panneaux PV</td><td style="padding:5px 10px;font-weight:700">${corrPanel} panneaux</td>
-        <td style="padding:5px 10px">Batterie</td><td style="padding:5px 10px;font-weight:700">${corrBat||0} kWh</td>
-      </tr>
-      <tr style="background:#f0f9f4">
-        <td style="padding:5px 10px">Onduleur</td><td style="padding:5px 10px;font-weight:700">${corrInv?corrInv+' kVA':d.inv_nom||'—'}</td>
-        <td style="padding:5px 10px">ROI estime</td><td style="padding:5px 10px;font-weight:700">${(d.roi||0).toFixed(1)} ans</td>
-      </tr>
-      <tr>
-        <td style="padding:5px 10px">Pack TEVIA</td><td style="padding:5px 10px;font-weight:700" colspan="3">${d.packNom||'Non selectionne'}</td>
-      </tr>
-      <tr style="background:#e8f5e9">
-        <td style="padding:6px 10px;font-weight:700">Montant devis TTC</td>
-        <td style="padding:6px 10px;font-weight:800;color:#2C6E49;font-size:1rem" colspan="3">${(d.cost_install||0).toLocaleString('fr-FR')} FCFA</td>
-      </tr>
-      ${corrections}
-    </table>
-  </div>
-  <div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:.88rem;color:#2C6E49;border-bottom:1px solid #e0e7ef;padding-bottom:4px;margin-bottom:8px">VISITE TECHNIQUE — ${v.date||today}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-      <div><span style="color:#888;font-size:.75rem">Technicien</span><br><strong>${v.techNom||'—'}</strong></div>
-      <div><span style="color:#888;font-size:.75rem">Telephone</span><br>${v.techTel||'—'}</div>
-      <div><span style="color:#888;font-size:.75rem">Toiture</span><br>${v.toitureType||'—'} — ${v.toitureEtat||'—'}</div>
-      <div><span style="color:#888;font-size:.75rem">Charpente</span><br>${v.charpente||'—'}</div>
-      <div><span style="color:#888;font-size:.75rem">Inclinaison</span><br>${v.inclinaison?v.inclinaison+' deg':'—'}</div>
-      <div><span style="color:#888;font-size:.75rem">Orientation</span><br>${v.orientation||'—'}</div>
+
+  <!-- SYNTHÈSE MATÉRIEL ──────────────────────────────── -->
+  <div class="rpt-synthese">
+    <div>
+      <div class="rpt-synthese-val">${corrPkW.toFixed(2)} kWc</div>
+      <div class="rpt-synthese-lbl">Puissance installée</div>
     </div>
-    ${v.contraintes?`<div style="background:#fff8e1;border-left:3px solid #F4B942;padding:8px 12px;border-radius:4px;font-size:.8rem"><strong>Contraintes :</strong> ${v.contraintes}</div>`:''}
+    <div>
+      <div class="rpt-synthese-val">${corrPanel}</div>
+      <div class="rpt-synthese-lbl">Panneaux 650 Wc</div>
+    </div>
+    <div>
+      <div class="rpt-synthese-val" style="font-size:.88rem">${invStr}</div>
+      <div class="rpt-synthese-lbl">Onduleur${(d.n_inv||1)>1?'s':''}</div>
+    </div>
+    <div>
+      <div class="rpt-synthese-val" style="font-size:.88rem;color:${corrBat>0?'#c17f00':'#aaa'}">${batStr}</div>
+      <div class="rpt-synthese-lbl">${corrBat>0?'Batterie'+(((d.n_bat||1))>1?'s':''):'Stockage'}</div>
+    </div>
+    <div>
+      <div class="rpt-synthese-val">${(d.E_annual_kWh||0).toLocaleString('fr-FR')} kWh</div>
+      <div class="rpt-synthese-lbl">Production / an</div>
+    </div>
   </div>
-  <div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:.88rem;color:#2C6E49;border-bottom:1px solid #e0e7ef;padding-bottom:4px;margin-bottom:8px">PLAN DE CABLAGE</div>
-    <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-      <tr style="background:#2C6E49;color:#fff">
-        <th style="padding:6px 10px;text-align:left">Type</th><th style="padding:6px 10px">Longueur</th>
-        <th style="padding:6px 10px">Section</th><th style="padding:6px 10px">Passages</th>
-        <th style="padding:6px 10px;text-align:left">Notes</th>
-      </tr>
-      <tr>
-        <td style="padding:6px 10px;font-weight:700">Cable DC (PV)</td>
-        <td style="padding:6px 10px;text-align:center">${v.pvLong?v.pvLong+' m':'—'}</td>
-        <td style="padding:6px 10px;text-align:center">${v.pvSection||'—'}</td>
-        <td style="padding:6px 10px;text-align:center">${v.pvPassages||'—'}</td>
-        <td style="padding:6px 10px;font-size:.76rem;color:#666">${v.pvNotes||'—'}</td>
-      </tr>
-      <tr style="background:#f8fafc">
-        <td style="padding:6px 10px;font-weight:700">Cable AC</td>
-        <td style="padding:6px 10px;text-align:center">${v.acLong?v.acLong+' m':'—'}</td>
-        <td style="padding:6px 10px;text-align:center">${v.acSection||'—'}</td>
-        <td style="padding:6px 10px;text-align:center">${v.acPassages||'—'}</td>
-        <td style="padding:6px 10px;font-size:.76rem;color:#666">${v.acNotes||'—'}</td>
-      </tr>
-    </table>
+
+  <!-- 1. INFORMATIONS GÉNÉRALES ───────────────────────── -->
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">1. INFORMATIONS GÉNÉRALES</div>
+    <div class="rpt-sec-body">
+      <div class="g2">
+        <div>
+          <div class="rpt-kv"><span>Client / Raison sociale</span><span>${d.client||'—'}</span></div>
+          <div class="rpt-kv"><span>Téléphone</span><span>${d.tel||'—'}</span></div>
+          <div class="rpt-kv"><span>Email</span><span>${d.email||'—'}</span></div>
+          <div class="rpt-kv"><span>Ville / Site</span><span>${d.ville||'—'}</span></div>
+        </div>
+        <div>
+          <div class="rpt-kv"><span>Type d'installation</span><span>${d.typeInst||'—'}</span></div>
+          <div class="rpt-kv"><span>Mode système</span><span>${d.gridType||'—'}</span></div>
+          <div class="rpt-kv"><span>Commercial (SC)</span><span>${d.techNom||'—'}</span></div>
+          <div class="rpt-kv"><span>Service Center</span><span>${d.sc||'—'}</span></div>
+          ${d.gps?`<div class="rpt-kv"><span>GPS</span><span>${d.gps}</span></div>`:''}
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:.88rem;color:#2C6E49;border-bottom:1px solid #e0e7ef;padding-bottom:4px;margin-bottom:8px">PHOTOS DU SITE</div>
-    ${photoHtml}
+
+  <!-- 2. DIMENSIONNEMENT VALIDÉ ──────────────────────── -->
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">2. DIMENSIONNEMENT VALIDÉ SUR SITE</div>
+    <div class="rpt-sec-body">
+      <div class="rpt-hl">
+        <div><div class="rpt-hl-val">${corrPkW.toFixed(2)} kWc</div><div class="rpt-hl-lbl">Puissance crête installée</div></div>
+        <div><div class="rpt-hl-val">${corrPanel}</div><div class="rpt-hl-lbl">Panneaux HIGON 650 Wc</div></div>
+        <div><div class="rpt-hl-val">${invStr}</div><div class="rpt-hl-lbl">Onduleur</div></div>
+        <div><div class="rpt-hl-val">${batStr}</div><div class="rpt-hl-lbl">Stockage</div></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="rpt-kv"><span>Puissance installée</span><span>${corrPkW.toFixed(2)} kWc</span></div>
+          <div class="rpt-kv"><span>Panneaux</span><span>${corrPanel} × HIGON 650 Wc Bifacial HJT</span></div>
+          <div class="rpt-kv"><span>Onduleur(s)</span><span>${invStr}</span></div>
+          <div class="rpt-kv"><span>Stockage batterie</span><span>${batStr}</span></div>
+        </div>
+        <div>
+          <div class="rpt-kv"><span>Production estimée / an</span><span>${(d.E_annual_kWh||0).toLocaleString('fr-FR')} kWh</span></div>
+          <div class="rpt-kv"><span>ROI estimé</span><span>${(d.roi||0).toFixed(1)} ans</span></div>
+          <div class="rpt-kv"><span>Pack TEVIA</span><span>${d.packNom||'Non sélectionné'}</span></div>
+          <div class="rpt-kv"><span>Montant devis TTC</span><span style="color:#2C6E49;font-size:1rem">${(d.cost_install||0).toLocaleString('fr-FR')} FCFA</span></div>
+        </div>
+      </div>
+    </div>
   </div>
-  ${v.notes?`<div style="margin-bottom:14px">
-    <div style="font-weight:700;font-size:.88rem;color:#2C6E49;border-bottom:1px solid #e0e7ef;padding-bottom:4px;margin-bottom:8px">OBSERVATIONS ET RECOMMANDATIONS</div>
-    <div style="background:#f8fafc;border-radius:6px;padding:12px;font-size:.83rem;line-height:1.6">${v.notes}</div>
-  </div>`:''}
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px;border-top:2px solid #2C6E49;padding-top:16px">
-    ${[['Etabli par (Commercial)',d.techNom||'—'],['Valide par (Technicien)',(v.techNom||'—')+(v.techTel?' · '+v.techTel:'')],['Lu et approuve (Client)',d.client||'—']].map(([t,n])=>`
-    <div style="text-align:center;border:1px solid #e0e7ef;border-radius:8px;padding:12px">
-      <div style="font-size:.72rem;color:#888;font-weight:600">${t}</div>
-      <div style="font-weight:700;margin:4px 0 8px">${n}</div>
-      <div style="height:35px;border-bottom:1px solid #ccc;margin:0 10px"></div>
-      <div style="font-size:.65rem;color:#aaa;margin-top:4px">Signature</div>
-    </div>`).join('')}
+
+  <!-- 3. RÉSULTATS VISITE TOITURE ────────────────────── -->
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">3. RÉSULTATS DE LA VISITE TECHNIQUE — TOITURE</div>
+    <div class="rpt-sec-body">
+      <div class="g2">
+        <div>
+          <div class="rpt-kv"><span>Type de toiture</span><span>${v.toitureType||'—'}</span></div>
+          <div class="rpt-kv"><span>État de la toiture</span><span>${v.toitureEtat||'—'}</span></div>
+          <div class="rpt-kv"><span>Charpente</span><span>${v.charpente||'—'}</span></div>
+        </div>
+        <div>
+          <div class="rpt-kv"><span>Inclinaison</span><span>${v.inclinaison?v.inclinaison+' °':'—'}</span></div>
+          <div class="rpt-kv"><span>Orientation</span><span>${v.orientation||'—'}</span></div>
+          ${v.contraintes?`<div class="rpt-kv"><span>Contraintes</span><span style="color:#e65100">${v.contraintes}</span></div>`:''}
+        </div>
+      </div>
+    </div>
   </div>
-  <div style="text-align:center;margin-top:16px;font-size:.68rem;color:#bbb">
-    EDF SAVANT GROUP CI SAS &bull; RCCM : CI-ABJ-03-2022-B16-00156 &bull; Genere le ${today}
+
+  <!-- 4. PLAN DE CÂBLAGE ──────────────────────────────── -->
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">4. PLAN DE CÂBLAGE</div>
+    <div class="rpt-sec-body">
+      <table class="rpt-table">
+        <thead>
+          <tr>
+            <th>Type</th><th>Longueur</th><th>Section</th><th>Passages / gaines</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Câble DC (PV → Onduleur)</b></td>
+            <td>${v.pvLong?v.pvLong+' m':'—'}</td>
+            <td>${v.pvSection||'—'}</td>
+            <td>${v.pvPassages||'—'}</td>
+            <td style="font-size:.72rem;color:#666">${v.pvNotes||'—'}</td>
+          </tr>
+          <tr>
+            <td><b>Câble AC (Onduleur → TGBT)</b></td>
+            <td>${v.acLong?v.acLong+' m':'—'}</td>
+            <td>${v.acSection||'—'}</td>
+            <td>${v.acPassages||'—'}</td>
+            <td style="font-size:.72rem;color:#666">${v.acNotes||'—'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- 5. PHOTOS DU SITE ──────────────────────────────── -->
+  <div class="rpt-sec">
+    <div class="rpt-sec-title">5. PHOTOS DU SITE</div>
+    <div class="rpt-sec-body">${photoHtml}</div>
+  </div>
+
+  ${corrHtml}
+  ${obsHtml}
+
+  <!-- SIGNATURES ─────────────────────────────────────── -->
+  <div class="rpt-sign">
+    <div class="rpt-sign-box">
+      <div class="rpt-sign-role">Établi par (Commercial)</div>
+      <div class="rpt-sign-name">${d.techNom||'—'}</div>
+      <div class="rpt-sign-line"></div>
+      <div class="rpt-sign-label">Signature</div>
+    </div>
+    <div class="rpt-sign-box">
+      <div class="rpt-sign-role">Validé par (Technicien)</div>
+      <div class="rpt-sign-name">${v.techNom||'—'}${v.techTel?' &middot; '+v.techTel:''}</div>
+      <div class="rpt-sign-line"></div>
+      <div class="rpt-sign-label">Signature</div>
+    </div>
+    <div class="rpt-sign-box">
+      <div class="rpt-sign-role">Lu et approuvé (Client)</div>
+      <div class="rpt-sign-name">${d.client||'—'}</div>
+      <div class="rpt-sign-line"></div>
+      <div class="rpt-sign-label">Signature</div>
+    </div>
+  </div>
+
+  <!-- PIED DE PAGE ────────────────────────────────────── -->
+  <div style="text-align:center;margin-top:14px;font-size:.66rem;color:#bbb;border-top:1px solid #eee;padding-top:8px">
+    EDF SAVANT GROUP CI SAS &bull; RCCM : CI-ABJ-03-2022-B16-00156 &bull; Généré le ${today}
+  </div>
+
 </div>`;
   document.getElementById('rpt-overlay').style.display='block';
 }
