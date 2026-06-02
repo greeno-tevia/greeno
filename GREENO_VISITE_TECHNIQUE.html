@@ -1539,7 +1539,7 @@ function openPvReception(prospectId){
       '<input class="pv-inv-sn" placeholder="N° de série onduleur ' + (i+1) + '" value="' + (invSns[i]||'') + '" style="flex:1;padding:6px 10px;border:1px solid #c5d8cc;border-radius:5px;font-size:.8rem;font-family:monospace">' +
       '</div>';
   }
-  document.getElementById('pv-inv-rows').innerHTML = invHtml || '<span style="color:#aaa;font-size:.8rem;font-style:italic">Pas d'onduleur renseigné</span>';
+  document.getElementById('pv-inv-rows').innerHTML = invHtml || '<span style="color:#aaa;font-size:.8rem;font-style:italic">Pas d\'onduleur renseigné</span>';
 
   // Batteries
   var nBat = d.n_bat || 0;
@@ -1701,7 +1701,7 @@ function generatePvDoc(){
            '<td style="padding:4px 8px;font-size:.78rem;font-family:monospace">' + (sn||'—') + '</td></tr>';
   }).join('') : '<tr><td colspan="2" style="padding:4px 8px;font-size:.78rem;color:#aaa">Aucune batterie</td></tr>';
 
-  var pvHtml = '<div style="font-family:'Segoe UI',Arial,sans-serif;color:#222;max-width:760px;margin:0 auto">' +
+  var pvHtml = '<div style="font-family:Arial,sans-serif;color:#222;max-width:760px;margin:0 auto">' +
 
   // EN-TÊTE
   '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:16px 0 12px;border-bottom:2px solid #2C6E49;margin-bottom:14px">' +
@@ -1719,7 +1719,7 @@ function generatePvDoc(){
   // IDENTIFIANT KIT
   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:#f0f7f2;border-radius:6px;padding:10px 14px;margin-bottom:12px">' +
     '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Kit ID</div><div style="font-weight:800;color:#1a5c30;font-family:monospace;font-size:.95rem">' + (pv.kitId||'—') + '</div></div>' +
-    '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Date d'installation</div><div style="font-weight:700;font-size:.85rem">' + today + '</div></div>' +
+    '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Date d\'installation</div><div style="font-weight:700;font-size:.85rem">' + today + '</div></div>' +
     '<div><div style="font-size:.65rem;color:#888;text-transform:uppercase">Technicien</div><div style="font-weight:700;font-size:.85rem">' + (pv.techNom||'—') + '</div></div>' +
   '</div>' +
 
@@ -1798,7 +1798,7 @@ function generatePvDoc(){
     '<div>• Panneaux HIGON : <b>25 ans</b> (performance linéaire) &bull; 12 ans produit</div>' +
     '<div>• Onduleur : <b>5 ans</b> constructeur &bull; Extension sur demande</div>' +
     '<div>• Batterie LFP : <b>10 ans</b> ou 4 000 cycles (capacité ≥ 80%)</div>' +
-    '<div>• Main d'œuvre &amp; installation : <b>3 ans</b> EDF SAVANT GROUP CI</div>' +
+    '<div>• Main d\'œuvre &amp; installation : <b>3 ans</b> EDF SAVANT GROUP CI</div>' +
     '<div>• SAV &amp; hotline GREENO CI : 08h–18h, lundi–samedi</div>' +
   '</div>' +
 
