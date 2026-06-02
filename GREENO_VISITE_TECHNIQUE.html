@@ -1084,6 +1084,11 @@ function generateReport(){
   const d=CURRENT, v=d.visite||{};
   const today=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 
+  // ── Logos depuis le DOM ──
+  const _hdrImgs = document.querySelectorAll('#main-header .logo-wrap img');
+  const LOGO_GREENO = _hdrImgs[0]?.src || '';
+  const LOGO_TEVIA  = _hdrImgs[1]?.src || '';
+
   // ── Valeurs corrigées visite ──
   const corrPanel = v.corrPanels ? parseInt(v.corrPanels)  : (d.N_panels||0);
   const corrBat   = v.corrBat   ? parseFloat(v.corrBat)   : (d.bat_kWh||0);
