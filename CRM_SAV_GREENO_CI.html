@@ -833,6 +833,9 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
       <div class="step" id="ttech-visite" onclick="showTechTab('visite')" style="padding:14px 28px">
         <span class="step-num" style="font-size:.85rem">2</span>📅 Visites Client
       </div>
+      <div class="step" id="ttech-install" onclick="showTechTab('install')" style="padding:14px 28px">
+        <span class="step-num" style="font-size:.85rem">3</span>🏗️ Installations en attente
+      </div>
     </div>
 
     <!-- Pane Interventions T1 -->
@@ -847,6 +850,15 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
         <span>Prospects avec RDV planifié · Mis à jour depuis l'onglet Prospects</span>
       </div>
       <div id="tech-visite-cards"></div>
+    </div>
+
+    <!-- Pane Installations en attente -->
+    <div id="tech-pane-install" style="display:none;border:1px solid #dee6ef;border-top:none;border-radius:0 0 8px 8px;padding:16px;min-height:200px">
+      <div style="font-size:.82rem;color:#0d47a1;margin-bottom:14px;padding:10px 14px;background:#E3F2FD;border:1px solid #90CAF9;border-radius:8px;display:flex;gap:8px;align-items:center">
+        <span style="font-size:1.1rem">🏗️</span>
+        <span>Clients convertis — installation à planifier · Statut : À installer</span>
+      </div>
+      <div id="tech-install-cards"></div>
     </div>
   </div><!-- /tab-tech -->
 
@@ -1503,7 +1515,8 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
     <!-- Stepper Prospects | Clients -->
     <div class="stepper" id="prospects-stepper" style="margin:0 0 0">
       <div class="step active" id="ptab-btn-list" onclick="showProspectTab('list')"><span class="step-num">1</span>🎯 Prospects</div>
-      <div class="step" id="ptab-btn-clients" onclick="showProspectTab('clients')"><span class="step-num">2</span>👥 Clients Installés</div>
+      <div class="step" id="ptab-btn-installe" onclick="showProspectTab('installe')"><span class="step-num">2</span>🔧 Clients à installer</div>
+      <div class="step" id="ptab-btn-clients" onclick="showProspectTab('clients')"><span class="step-num">3</span>👥 Clients Installés</div>
     </div>
 
     <!-- ONGLET PROSPECTS LIST -->
@@ -1523,6 +1536,7 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
             <option value="Visité">🏠 Visité</option>
             <option value="En attente">⏳ En attente</option>
             <option value="Non intéressé">👎 Non intéressé</option>
+            <option value="À installer">🔧 À installer</option>
             <option value="Converti">✅ Converti</option>
             <option value="Perdu">❌ Perdu</option>
           </select>
@@ -1586,6 +1600,46 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
     <!-- Detail panel -->
     <div id="detail-prospect" class="detail-panel"></div>
     </div><!-- /ptab-list -->
+
+    <!-- ONGLET CLIENTS À INSTALLER -->
+    <div id="ptab-installe" style="display:none;padding:18px 28px">
+      <div style="background:linear-gradient(135deg,#0a2218,#1a5c30);border-radius:12px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+        <span style="font-size:1.8rem">🔧</span>
+        <div>
+          <div style="font-size:.95rem;font-weight:900;color:#fff">Clients à installer</div>
+          <div style="font-size:.73rem;color:rgba(255,255,255,.65);margin-top:2px">Prospects convertis — installation à planifier</div>
+        </div>
+        <div id="installe-kpi-count" style="margin-left:auto;background:rgba(255,255,255,.15);border-radius:8px;padding:6px 14px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:900;color:#F4B942">—</div>
+          <div style="font-size:.65rem;color:rgba(255,255,255,.7);text-transform:uppercase">en attente</div>
+        </div>
+      </div>
+
+      <!-- Filtres -->
+      <div style="background:#fff;border:1px solid #dee6ef;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+        <div>
+          <label style="font-size:.73rem;color:#666;display:block;margin-bottom:3px">Ville</label>
+          <select id="fi-ville" onchange="renderClientsAInstaller()" style="min-width:130px">
+            <option value="">Toutes</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.73rem;color:#666;display:block;margin-bottom:3px">Technicien</label>
+          <select id="fi-tech" onchange="renderClientsAInstaller()" style="min-width:150px">
+            <option value="">Tous</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:170px">
+          <label style="font-size:.73rem;color:#666;display:block;margin-bottom:3px">Recherche</label>
+          <input type="text" id="fi-search" placeholder="Nom, téléphone..." oninput="renderClientsAInstaller()" style="width:100%;box-sizing:border-box">
+        </div>
+      </div>
+
+      <div id="installe-cards-grid"></div>
+      <div id="installe-empty" style="display:none;text-align:center;padding:40px;color:#aaa;font-size:.9rem">
+        Aucun client en attente d'installation.
+      </div>
+    </div><!-- /ptab-installe -->
 
     <!-- ONGLET CLIENTS INSTALLÉS -->
     <div id="ptab-clients" style="display:none;padding:18px 28px">
@@ -1725,6 +1779,7 @@ footer{text-align:center;padding:12px;font-size:.7rem;color:#888;border-top:1px 
           <option value="Nouveau">Nouveau</option>
           <option value="Contacté">Contacté</option>
           <option value="RDV Planifié">RDV Planifié</option>
+          <option value="À installer">À installer (client converti)</option>
           <option value="Converti">Converti (client installé)</option>
           <option value="Perdu">Perdu</option>
         </select>
@@ -3724,6 +3779,7 @@ var PROSPECT_BADGE = {
   'Visité':           '<span class="badge b-pvisit">🏠 Visité</span>',
   'En attente':       '<span class="badge b-pwait">⏳ En attente</span>',
   'Non intéressé':    '<span class="badge b-pni">👎 Non intéressé</span>',
+  'À installer':      '<span class="badge" style="background:#E3F2FD;color:#0d47a1;border:1px solid #90CAF9">🔧 À installer</span>',
   'Converti':         '<span class="badge b-pconv">✅ Converti</span>',
   'Perdu':            '<span class="badge b-pperdu">❌ Perdu</span>',
 };
@@ -3852,7 +3908,7 @@ function renderProspectAging(prospects) {
     var buck = buckets.find(function(b){ return age >= b.min && age <= b.max; });
     if(!buck) buck = buckets[buckets.length-1];
     buck.total++;
-    if(p.statut !== 'Converti' && p.statut !== 'Perdu') buck.actifs++;
+    if(p.statut !== 'Converti' && p.statut !== 'Installé' && p.statut !== 'Perdu') buck.actifs++;
     if(p.statut === 'RDV Planifié') buck.rdv++;
     if(p.statut === 'Converti') buck.convertis++;
   });
@@ -4002,8 +4058,8 @@ function renderProspects() {
   }
   if(empty) empty.style.display='none';
 
-  var statColors={'Nouveau':'#1565C0','Contacté':'#E65100','RDV Planifié':'#F57F17','Converti':'#2E7D32','Perdu':'#757575'};
-  var statBg={'Nouveau':'#E3F2FD','Contacté':'#FBE9E7','RDV Planifié':'#FFF8E1','Converti':'#E8F5E9','Perdu':'#F5F5F5'};
+  var statColors={'Nouveau':'#1565C0','Contacté':'#E65100','RDV Planifié':'#F57F17','À installer':'#0d47a1','Converti':'#2E7D32','Perdu':'#757575'};
+  var statBg={'Nouveau':'#E3F2FD','Contacté':'#FBE9E7','RDV Planifié':'#FFF8E1','À installer':'#E3F2FD','Converti':'#E8F5E9','Perdu':'#F5F5F5'};
 
   // Couleurs avatar par statut (Salesforce Lightning)
   var AV_COLOR = {
@@ -4018,6 +4074,7 @@ function renderProspects() {
     "Visité":        "background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7",
     "En attente":    "background:#F3E5F5;color:#4A148C;border-color:#CE93D8",
     "Non intéressé": "background:#F5F5F5;color:#555;border-color:#CCC",
+    "À installer":   "background:#E3F2FD;color:#0d47a1;border-color:#90CAF9",
     "Converti":      "background:#E8F5E9;color:#1B5E20;border-color:#A5D6A7",
     "Perdu":         "background:#FFEBEE;color:#B71C1C;border-color:#EF9A9A"
   };
@@ -4266,10 +4323,10 @@ function deleteProspect(id) {
 }
 
 function convertProspect(id) {
-  if (!confirm('Marquer ce prospect comme Converti (client installé) ?')) return;
+  if (!confirm('Marquer ce prospect comme client à installer ?')) return;
   var prospects = getProspects();
   var p = prospects.find(function(x){ return x.id===id; });
-  if (p) p.statut = 'Converti';
+  if (p) p.statut = 'À installer';
   saveProspects(prospects);
   renderProspects();
   showProspectDetail(id);
@@ -4279,19 +4336,24 @@ function convertProspect(id) {
 // SECTION TECHNICIENS
 // ═══════════════════════════════════════════════════════════════
 function showProspectTab(tab) {
-  document.getElementById('ptab-list').style.display    = tab==='list'    ? 'block' : 'none';
-  document.getElementById('ptab-clients').style.display = tab==='clients' ? 'block' : 'none';
+  document.getElementById('ptab-list').style.display     = tab==='list'     ? 'block' : 'none';
+  document.getElementById('ptab-installe').style.display = tab==='installe' ? 'block' : 'none';
+  document.getElementById('ptab-clients').style.display  = tab==='clients'  ? 'block' : 'none';
+  var tabs = ['list','installe','clients'];
   document.querySelectorAll('#prospects-stepper .step').forEach(function(s,i){
-    s.classList.toggle('active', (tab==='list' && i===0) || (tab==='clients' && i===1));
+    s.classList.toggle('active', tabs[i]===tab);
   });
-  if(tab==='clients') renderClients();
+  if(tab==='clients')  renderClients();
+  if(tab==='installe') renderClientsAInstaller();
 }
 
 function showTechTab(tab) {
-  document.getElementById('tech-pane-t1').style.display    = tab==='t1'     ? '' : 'none';
-  document.getElementById('tech-pane-visite').style.display= tab==='visite' ? '' : 'none';
-  document.getElementById('ttech-t1').classList.toggle('active',    tab==='t1');
-  document.getElementById('ttech-visite').classList.toggle('active', tab==='visite');
+  document.getElementById('tech-pane-t1').style.display      = tab==='t1'      ? '' : 'none';
+  document.getElementById('tech-pane-visite').style.display  = tab==='visite'  ? '' : 'none';
+  document.getElementById('tech-pane-install').style.display = tab==='install' ? '' : 'none';
+  document.getElementById('ttech-t1').classList.toggle('active',      tab==='t1');
+  document.getElementById('ttech-visite').classList.toggle('active',  tab==='visite');
+  document.getElementById('ttech-install').classList.toggle('active', tab==='install');
   renderTech();
 }
 
@@ -4299,7 +4361,179 @@ function renderTech() {
   var filterTech = document.getElementById('tech-filter-name').value;
   renderTechT1(filterTech);
   renderTechVisites(filterTech);
+  renderTechInstallations(filterTech);
   populateTechFilterSelect();
+}
+
+// ── CLIENTS À INSTALLER (onglet Parcours Client) ─────────────────────────────
+function renderClientsAInstaller() {
+  var prospects = getProspects().filter(function(p){ return p.statut === 'À installer'; });
+
+  // Populate filter selects
+  var villesSel = document.getElementById('fi-ville');
+  var techsSel  = document.getElementById('fi-tech');
+  if (villesSel) {
+    var villes = Array.from(new Set(prospects.map(function(p){ return p.ville||''; }).filter(Boolean))).sort();
+    var curV = villesSel.value;
+    villesSel.innerHTML = '<option value="">Toutes</option>' + villes.map(function(v){ return '<option value="'+v+'"'+(v===curV?' selected':'')+'>'+v+'</option>'; }).join('');
+  }
+  if (techsSel) {
+    var techs = Array.from(new Set(prospects.map(function(p){ return p.tech||''; }).filter(Boolean))).sort();
+    var curT = techsSel.value;
+    techsSel.innerHTML = '<option value="">Tous</option>' + techs.map(function(t){ return '<option value="'+t+'"'+(t===curT?' selected':'')+'>'+t+'</option>'; }).join('');
+  }
+
+  // Apply filters
+  var fVille  = (villesSel && villesSel.value) || '';
+  var fTech   = (techsSel  && techsSel.value)  || '';
+  var fSearch = (document.getElementById('fi-search') && document.getElementById('fi-search').value.toLowerCase()) || '';
+  if (fVille)  prospects = prospects.filter(function(p){ return p.ville===fVille; });
+  if (fTech)   prospects = prospects.filter(function(p){ return p.tech===fTech; });
+  if (fSearch) prospects = prospects.filter(function(p){
+    return (p.nom||'').toLowerCase().includes(fSearch) || (p.telephone||'').includes(fSearch);
+  });
+
+  // KPI counter
+  var kpi = document.getElementById('installe-kpi-count');
+  if (kpi) kpi.querySelector('div').textContent = prospects.length;
+
+  var grid  = document.getElementById('installe-cards-grid');
+  var empty = document.getElementById('installe-empty');
+  if (!grid) return;
+
+  if (!prospects.length) {
+    grid.innerHTML  = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px">';
+  prospects.forEach(function(p) {
+    var d = (p.dimensionnement && typeof p.dimensionnement === 'object') ? p.dimensionnement : {};
+    var pack   = d.pack_nom    || p.pack   || '—';
+    var puiss  = d.corrPanels  ? (parseInt(d.corrPanels)*0.65).toFixed(1)+' kWc' : (d.kWc ? d.kWc+' kWc' : '—');
+    var nPan   = d.corrPanels  || d.N_panels || '—';
+    var nInv   = d.n_inv       || '—';
+    var nBat   = d.n_bat       || '—';
+    var invNom = d.inv_nom     || '—';
+    var batNom = d.bat_label   || d.bat_nom || '—';
+    var montant= d.montant_ttc || d.montant || '—';
+    if (montant && montant !== '—') montant = Number(montant).toLocaleString('fr-FR')+' FCFA';
+    html += '<div style="background:#fff;border:1.5px solid #90CAF9;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07)">'
+      // Header bleu
+      +'<div style="background:linear-gradient(135deg,#0d2e1a,#1a5c30);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div>'
+          +'<div style="font-weight:800;color:#fff;font-size:.95rem">'+p.nom+'</div>'
+          +'<div style="font-size:.72rem;color:rgba(255,255,255,.7)">📍 '+(p.ville||'—')+' &nbsp;|&nbsp; 📞 '+(p.telephone||'—')+'</div>'
+        +'</div>'
+        +'<span style="background:#F4B942;color:#000;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px">🔧 À installer</span>'
+      +'</div>'
+      // Body matériels
+      +'<div style="padding:12px 16px">'
+        +'<div style="font-size:.73rem;font-weight:700;color:#0d47a1;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">📦 Matériel TEVIA — '+pack+'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.78rem">'
+          +'<div style="color:#555">⚡ Puissance :</div><div style="font-weight:700">'+puiss+'</div>'
+          +'<div style="color:#555">☀️ Panneaux :</div><div style="font-weight:700">'+nPan+' unités</div>'
+          +'<div style="color:#555">🔄 Onduleur :</div><div style="font-weight:700">'+nInv+' × '+invNom+'</div>'
+          +'<div style="color:#555">🔋 Batteries :</div><div style="font-weight:700">'+nBat+' × '+batNom+'</div>'
+          +'<div style="color:#555">💰 Montant :</div><div style="font-weight:700;color:#2C6E49">'+montant+'</div>'
+        +'</div>'
+        // Technicien assigné
+        +'<div style="margin-top:10px;padding-top:8px;border-top:1px solid #eef;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+          +'<span style="font-size:.73rem;color:#666">👷 Tech :</span>'
+          +'<span style="font-size:.78rem;font-weight:700">'+( p.tech || '<em style="color:#aaa">Non assigné</em>'  )+'</span>'
+          +'<div style="margin-left:auto;display:flex;gap:6px">'
+            +'<button class="btn btn-g btn-sm" onclick="openPvReception(\''+p.id+'\')" title="Créer PV de réception">📋 PV Réception</button>'
+            +'<button class="btn btn-outline btn-sm" onclick="showProspectDetail(\''+p.id+'\');showProspectTab(\'list\')" title="Voir dossier">👁 Dossier</button>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  });
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+// ── INSTALLATIONS EN ATTENTE (vue technicien) ─────────────────────────────────
+function renderTechInstallations(filterTech) {
+  var prospects = getProspects().filter(function(p){ return p.statut === 'À installer'; });
+  if (filterTech) prospects = prospects.filter(function(p){ return p.tech === filterTech; });
+
+  var wrap = document.getElementById('tech-install-cards');
+  if (!wrap) return;
+
+  if (!prospects.length) {
+    wrap.innerHTML = '<div class="empty-tech" style="text-align:center;padding:40px 20px;color:#888">'
+      +'<div style="font-size:2.5rem;margin-bottom:8px">🏗️</div>'
+      +'<div style="font-weight:700;font-size:1rem">Aucune installation en attente'+(filterTech?' pour '+filterTech:'')+'</div>'
+      +'<div style="font-size:.8rem;margin-top:4px">Les clients convertis apparaîtront ici</div></div>';
+    return;
+  }
+
+  var html = '';
+  prospects.forEach(function(p) {
+    var d = (p.dimensionnement && typeof p.dimensionnement === 'object') ? p.dimensionnement : {};
+    var pack  = d.pack_nom  || p.pack  || '—';
+    var nPan  = d.corrPanels || d.N_panels || '—';
+    var nInv  = d.n_inv    || '—';
+    var nBat  = d.n_bat    || '—';
+    var invNom= d.inv_nom  || '—';
+    var batNom= d.bat_label || d.bat_nom || '—';
+    // Statut installation
+    var instSt = p.install_statut || 'En attente';
+    var stBg   = instSt==='Terminée' ? '#E8F5E9' : instSt==='Planifiée' ? '#E3F2FD' : '#FFF8E1';
+    var stCol  = instSt==='Terminée' ? '#1B5E20' : instSt==='Planifiée' ? '#0d47a1' : '#E65100';
+    var datePlan = p.install_date || '—';
+
+    html += '<div class="tech-item" style="margin-bottom:12px;border-left:4px solid #2C6E49">'
+      +'<div class="ti-main" style="flex:1">'
+        +'<div class="ti-client" style="font-size:.95rem">'+p.nom+'</div>'
+        +'<div style="font-size:.72rem;color:#666;margin-top:2px">📍 '+(p.ville||'—')+'&nbsp;·&nbsp;📞 '+(p.telephone||'—')+'</div>'
+        +'<div style="font-size:.73rem;color:#444;margin-top:6px;background:#F8F9FA;border-radius:6px;padding:6px 10px">'
+          +'<strong>📦 '+pack+'</strong> &nbsp;|&nbsp; '
+          +nPan+' pan. &nbsp;|&nbsp; '+nInv+' × '+invNom+' &nbsp;|&nbsp; '+nBat+' × '+batNom
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:160px">'
+        +'<span style="font-size:.72rem;font-weight:700;background:'+stBg+';color:'+stCol+';border-radius:12px;padding:3px 10px">'+instSt+'</span>'
+        +'<div style="font-size:.72rem;color:#666">📅 '+(datePlan!=='—' ? datePlan : 'Date à planifier')+'</div>'
+        +'<div style="display:flex;gap:5px;margin-top:4px">'
+          // Technicien peut se self-assign et planifier
+          +'<button class="btn btn-g btn-sm" onclick="selfAssignInstall(\''+p.id+'\',\''+filterTech+'\')" title="Se désigner pour cette installation">✋ M\'assigner</button>'
+          +'<button class="btn btn-outline btn-sm" onclick="openPvReception(\''+p.id+'\')" title="Ouvrir PV de réception">📋 PV</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+// Self-assign tech to installation
+function selfAssignInstall(prospectId, filterTech) {
+  var prospects = getProspects();
+  var idx = prospects.findIndex(function(p){ return p.id===prospectId; });
+  if (idx < 0) return;
+  var techName = (currentUser && currentUser.nom) ? currentUser.nom : prompt('Votre nom :', filterTech||'');
+  if (!techName) return;
+  var dateStr = prompt('Date d\'installation planifiée (AAAA-MM-JJ) :', new Date().toISOString().split('T')[0]);
+  if (!dateStr) return;
+  prospects[idx].tech           = techName;
+  prospects[idx].install_date   = dateStr;
+  prospects[idx].install_statut = 'Planifiée';
+  saveProspects(prospects);
+  renderTechInstallations(filterTech);
+  // Simple toast feedback
+  var toast = document.createElement('div');
+  toast.textContent = '✅ Installation planifiée pour le ' + dateStr;
+  toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#2C6E49;color:#fff;padding:10px 18px;border-radius:10px;font-size:.82rem;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+  document.body.appendChild(toast);
+  setTimeout(function(){ toast.remove(); }, 3000);
+}
+
+// Stub: open PV de réception (sera implémenté dans tâche #43)
+function openPvReception(prospectId) {
+  alert('PV de réception — à venir dans la prochaine mise à jour.\nDossier : ' + prospectId);
 }
 
 function populateTechFilterSelect() {
@@ -4667,260 +4901,5 @@ function saveSuiviCommercial() {
   var idx = pros.findIndex(function(p){return p.id===pId;});
   if(idx >= 0) {
     if(dec === 'converti') {
-      pros[idx].statut = 'Converti';
-    } else if(dec === 'non_interesse') {
-      pros[idx].statut = 'Non intéressé';
-    } else if(dec === 'en_attente') {
-      pros[idx].statut = 'En attente';
-    }
-    saveProspects(pros);
-  }
-
-  closeModal('modal-suivi-commercial');
-  renderTech();
-  renderProspects();
-  showNotif('Suivi commercial enregistré');
-}
-
-// Afficher les activités d'un prospect (pour la timeline)
-function renderActivitesList(prospectId) {
-  var acts = getActivites().filter(function(a){return a.prospect_id===prospectId;});
-  acts.sort(function(a,b){return (b.date+b.heure).localeCompare(a.date+a.heure);});
-  if(!acts.length) return '<div class="vc-acti-empty">Aucune activité enregistrée</div>';
-
-  var LABEL = {
-    'visite':     {cls:'res-visite',   txt:'✅ Visité'},
-    'en_cours':   {cls:'res-en-cours', txt:'🔄 En cours'},
-    'replanifiee':{cls:'res-replanifiee',txt:'📅 Replanifiée'},
-    'annulee':    {cls:'res-annulee',  txt:'❌ Annulée'},
-    'converti':   {cls:'res-converti', txt:'✅ Converti'},
-    'non_interesse':{cls:'res-non-interesse',txt:'👎 Non intéressé'},
-    'en_attente': {cls:'res-en-attente',txt:'⏳ En attente'}
-  };
-  var DOT_COLOR = {
-    'visite':'#2E7D32','en_cours':'#F57F17','replanifiee':'#1565C0',
-    'annulee':'#C62828','converti':'#2E7D32','non_interesse':'#6A1B9A','en_attente':'#E65100'
-  };
-
-  return '<div class="acti-timeline">'+acts.map(function(a){
-    var lbl = LABEL[a.resultat] || {cls:'res-en-cours', txt:a.resultat};
-    var col = DOT_COLOR[a.resultat] || '#999';
-    var typeLabel = a.type==='tech_visite' ? '👷 '+a.auteur : '👔 '+a.auteur;
-    return '<div class="acti-item">'
-      +'<div class="acti-dot" style="background:'+col+'"></div>'
-      +'<div class="acti-body">'
-        +'<div class="acti-meta">'+typeLabel+' · '+(a.date||'')+(a.heure?' '+a.heure:'')+' '
-          +(a.type==='tech_visite'?'<span style="font-size:.68rem;background:#e8f0fe;color:#1565C0;border-radius:8px;padding:1px 6px">Technicien T1</span>'
-          :'<span style="font-size:.68rem;background:#fff3e0;color:#E65100;border-radius:8px;padding:1px 6px">Commercial</span>')
-        +'</div>'
-        +'<span class="acti-result '+lbl.cls+'">'+lbl.txt+'</span>'
-        +(a.notes?'<div class="acti-notes">'+a.notes+'</div>':'')
-      +'</div></div>';
-  }).join('')+'</div>';
-}
-
-// ─── Notification toast légère ────────────────────────────────────────────
-function showNotif(msg) {
-  var n = document.getElementById('toast-notif');
-  if(!n) {
-    n = document.createElement('div');
-    n.id = 'toast-notif';
-    n.style.cssText = 'position:fixed;bottom:28px;right:28px;background:#0d2e1a;color:#fff;'
-      +'padding:12px 22px;border-radius:10px;font-size:.85rem;font-weight:700;z-index:9999;'
-      +'box-shadow:0 4px 16px rgba(0,0,0,.25);opacity:0;transition:opacity .3s';
-    document.body.appendChild(n);
-  }
-  n.textContent = '✅ ' + msg;
-  n.style.opacity = '1';
-  setTimeout(function(){ n.style.opacity = '0'; }, 2800);
-}
-
-</script>
-
-<footer>GREENO CI &mdash; CRM Gestion Client &amp; SAV &middot; Solutions Solaires C&ocirc;te d&apos;Ivoire &middot; v2.2 Mai 2026</footer>
-<!-- ██████████████ MODAL ACTIVITÉ TECHNICIEN ██████████████ -->
-<div id="modal-activite-tech" class="modal-bg" onclick="if(event.target===this)closeModal('modal-activite-tech')">
-  <div class="modal-box" style="max-width:500px">
-    <div class="modal-hdr">
-      <span>⚙️ Enregistrer une Activité</span>
-      <button class="btn-close" onclick="closeModal('modal-activite-tech')">✕</button>
-    </div>
-    <div class="modal-body">
-      <!-- Info prospect (readonly) -->
-      <div style="background:#f0f5fb;border-radius:8px;padding:10px 14px;margin-bottom:14px">
-        <div style="font-size:.72rem;color:#666;margin-bottom:2px">PROSPECT / VISITE</div>
-        <div id="act-prospect-name" style="font-size:.95rem;font-weight:700;color:#0d2e1a">—</div>
-        <div id="act-prospect-detail" style="font-size:.75rem;color:#555;margin-top:2px">—</div>
-        <input type="hidden" id="act-prospect-id">
-      </div>
-
-      <!-- Résultat de la visite -->
-      <label>🏆 Résultat de la visite <span style="color:red">*</span></label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px" id="act-result-grid">
-        <button class="result-btn" data-val="en_cours" onclick="selectResultat(this,'en_cours')"
-          style="padding:10px;border:2px solid #FFE0B2;border-radius:8px;background:#FFF8E1;cursor:pointer;font-size:.82rem;font-weight:700;color:#F57F17;transition:all .2s">
-          🔄 En cours
-        </button>
-        <button class="result-btn" data-val="visite" onclick="selectResultat(this,'visite')"
-          style="padding:10px;border:2px solid #C8E6C9;border-radius:8px;background:#F1F8E9;cursor:pointer;font-size:.82rem;font-weight:700;color:#2E7D32;transition:all .2s">
-          ✅ Visité
-        </button>
-        <button class="result-btn" data-val="replanifiee" onclick="selectResultat(this,'replanifiee')"
-          style="padding:10px;border:2px solid #BBDEFB;border-radius:8px;background:#E3F2FD;cursor:pointer;font-size:.82rem;font-weight:700;color:#1565C0;transition:all .2s">
-          📅 Replanifiée
-        </button>
-        <button class="result-btn" data-val="annulee" onclick="selectResultat(this,'annulee')"
-          style="padding:10px;border:2px solid #FFCDD2;border-radius:8px;background:#FFEBEE;cursor:pointer;font-size:.82rem;font-weight:700;color:#C62828;transition:all .2s">
-          ❌ Annulée
-        </button>
-      </div>
-      <input type="hidden" id="act-resultat" value="">
-
-      <!-- Reprogrammation si replanifiée -->
-      <div id="act-replan-block" style="display:none;background:#E3F2FD;border-radius:8px;padding:12px;margin-bottom:12px">
-        <div style="font-size:.78rem;font-weight:700;color:#1565C0;margin-bottom:8px">📅 Nouvelle date de visite</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>
-            <label>Date</label>
-            <input type="date" id="act-new-date">
-          </div>
-          <div>
-            <label>Heure</label>
-            <input type="time" id="act-new-heure">
-          </div>
-        </div>
-      </div>
-
-      <!-- Date/Heure de l'activité -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label>📅 Date de l'activité</label>
-          <input type="date" id="act-date">
-        </div>
-        <div>
-          <label>⏰ Heure</label>
-          <input type="time" id="act-heure">
-        </div>
-      </div>
-
-      <!-- Technicien -->
-      <label>👷 Technicien</label>
-      <select id="act-tech">
-        <option value="">Sélectionner...</option>
-        <option value="Touré M.">Touré M.</option>
-        <option value="N'Goran Y.">N'Goran Y.</option>
-        <option value="Koné B.">Koné B.</option>
-        <option value="Diallo A.">Diallo A.</option>
-      </select>
-
-      <!-- Notes -->
-      <label>📝 Notes / Compte-rendu</label>
-      <textarea id="act-notes" rows="3" placeholder="Observations, constats terrain, points d'attention..."></textarea>
-
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <button class="btn btn-g" style="flex:1" onclick="saveActiviteTech()">💾 Enregistrer l'activité</button>
-        <button class="btn btn-outline" onclick="closeModal('modal-activite-tech')">Annuler</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ██████████████ MODAL SUIVI COMMERCIAL ██████████████ -->
-<div id="modal-suivi-commercial" class="modal-bg" onclick="if(event.target===this)closeModal('modal-suivi-commercial')">
-  <div class="modal-box" style="max-width:500px">
-    <div class="modal-hdr">
-      <span>📊 Suivi Commercial</span>
-      <button class="btn-close" onclick="closeModal('modal-suivi-commercial')">✕</button>
-    </div>
-    <div class="modal-body">
-      <!-- Info prospect -->
-      <div style="background:#f0f5fb;border-radius:8px;padding:10px 14px;margin-bottom:14px">
-        <div style="font-size:.72rem;color:#666;margin-bottom:2px">PROSPECT VISITÉ</div>
-        <div id="suivi-prospect-name" style="font-size:.95rem;font-weight:700;color:#0d2e1a">—</div>
-        <div id="suivi-prospect-detail" style="font-size:.75rem;color:#555;margin-top:2px">—</div>
-        <input type="hidden" id="suivi-prospect-id">
-      </div>
-
-      <!-- Décision commerciale -->
-      <label>🎯 Décision commerciale <span style="color:red">*</span></label>
-      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px">
-        <button class="suivi-btn" data-val="converti" onclick="selectSuivi(this,'converti')"
-          style="padding:12px 16px;border:2px solid #C8E6C9;border-radius:8px;background:#F1F8E9;cursor:pointer;font-size:.85rem;font-weight:700;color:#2E7D32;text-align:left;transition:all .2s">
-          ✅ Converti — Prospect devient client installé
-        </button>
-        <button class="suivi-btn" data-val="en_attente" onclick="selectSuivi(this,'en_attente')"
-          style="padding:12px 16px;border:2px solid #FFCC80;border-radius:8px;background:#FFF8E1;cursor:pointer;font-size:.85rem;font-weight:700;color:#E65100;text-align:left;transition:all .2s">
-          ⏳ En attente — Recontact ultérieur nécessaire
-        </button>
-        <button class="suivi-btn" data-val="non_interesse" onclick="selectSuivi(this,'non_interesse')"
-          style="padding:12px 16px;border:2px solid #CE93D8;border-radius:8px;background:#F3E5F5;cursor:pointer;font-size:.85rem;font-weight:700;color:#6A1B9A;text-align:left;transition:all .2s">
-          👎 Non intéressé — Clôturer le prospect
-        </button>
-      </div>
-      <input type="hidden" id="suivi-decision" value="">
-
-      <!-- Date/heure -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>📅 Date</label><input type="date" id="suivi-date"></div>
-        <div><label>⏰ Heure</label><input type="time" id="suivi-heure"></div>
-      </div>
-
-      <!-- Commercial -->
-      <label>👔 Commercial</label>
-      <input type="text" id="suivi-commercial" placeholder="Nom du commercial">
-
-      <!-- Notes -->
-      <label>📝 Notes</label>
-      <textarea id="suivi-notes" rows="3" placeholder="Compte-rendu de la discussion commerciale..."></textarea>
-
-      <div style="display:flex;gap:10px;margin-top:16px">
-        <button class="btn btn-g" style="flex:1" onclick="saveSuiviCommercial()">💾 Enregistrer</button>
-        <button class="btn btn-outline" onclick="closeModal('modal-suivi-commercial')">Annuler</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ██ SETTINGS MODAL ██ -->
-<div id="modal-settings" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.3);width:100%;max-width:700px;max-height:90vh;overflow-y:auto;padding:28px">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>⚙️ Paramètres & Gestion des Utilisateurs</h2>
-      <button class="modal-close" onclick="document.getElementById('modal-settings').style.display='none'">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="settings-section">
-        <h3>👤 Mon Compte</h3>
-        <div id="my-account-info" style="padding:10px 14px;background:#f8faf9;border-radius:8px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:10px">
-          <div class="login-field" style="flex:1;margin-bottom:0">
-            <label>Nouveau mot de passe</label>
-            <input type="password" id="new-pwd1" placeholder="Nouveau mot de passe">
-          </div>
-          <div class="login-field" style="flex:1;margin-bottom:0">
-            <label>Confirmer</label>
-            <input type="password" id="new-pwd2" placeholder="Confirmer">
-          </div>
-        </div>
-        <button class="btn btn-g" style="margin-top:10px" onclick="changePassword()">💾 Changer le mot de passe</button>
-      </div>
-
-      <div id="admin-section" class="settings-section" style="display:none">
-        <h3>👥 Gestion des Utilisateurs <span style="font-size:.7rem;font-weight:500;color:#888;text-transform:none">(Admin uniquement)</span></h3>
-        <div id="users-list" style="margin-bottom:16px"></div>
-        <div style="background:#f8faf9;border-radius:10px;padding:16px;border:1.5px dashed #cce">
-          <div style="font-size:.78rem;font-weight:700;color:#444;margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px">Ajouter un utilisateur</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
-            <div class="login-field" style="margin-bottom:0"><label>Nom</label><input type="text" id="nu-nom" placeholder="Nom complet"></div>
-            <div class="login-field" style="margin-bottom:0"><label>Identifiant</label><input type="text" id="nu-id" placeholder="login"></div>
-            <div class="login-field" style="margin-bottom:0">
-              <label>Rôle</label>
-              <select id="nu-role">
-                <option value="commercial">Commercial</option>
-                <option value="technicien">Technicien</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div cla
+      pros[idx].statut = 'À installer';
+    } else if(dec === 'non_i
